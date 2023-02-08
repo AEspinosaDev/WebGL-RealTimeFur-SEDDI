@@ -70,9 +70,15 @@ define(['./BinaryDataLoader','./JsonDataLoader'], function(BinaryDataLoader,Json
             JsonDataLoader.load(url,
             function(data) {
                 root.bufferStrides = gl.createBuffer();
-                // loadBufferJ(root.bufferStrides, gl.ARRAY_BUFFER, data.meshes[0].vertices);
                 gl.bindBuffer(gl.ARRAY_BUFFER,root.bufferStrides);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].vertices), gl.STATIC_DRAW);
+                root.UVs =gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER,root.UVs);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].texturecoords[0]), gl.STATIC_DRAW);
+                root.bufferNormals =gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER,root.bufferNormals);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].normals), gl.STATIC_DRAW);
+
                 root.bufferIndices && root.bufferStrides && callback();
             }
         );
@@ -87,6 +93,23 @@ define(['./BinaryDataLoader','./JsonDataLoader'], function(BinaryDataLoader,Json
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferIndices);
         },
 
+        bindBuffersExtended: function(shader){
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides);
+            gl.enableVertexAttribArray(shader.rm_Vertex);
+            gl.vertexAttribPointer(shader.rm_Vertex, 3, gl.FLOAT, false,  3 * Float32Array.BYTES_PER_ELEMENT, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.UVs);
+            gl.enableVertexAttribArray(shader.rm_TexCoord0);
+            gl.vertexAttribPointer(shader.rm_TexCoord0, 2, gl.FLOAT, false,  2 * Float32Array.BYTES_PER_ELEMENT,0);
+
+            if(shader.rm_Normal!=-1){
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferNormals);
+            gl.enableVertexAttribArray(shader.rm_Normal);
+            gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false,  3 * Float32Array.BYTES_PER_ELEMENT,0);
+            }
+            
+            
+        },
         /**
          * Returns number of inices in model
          * @return {number} - number of indices

@@ -32,6 +32,7 @@ define(['framework/BaseShader'], function(BaseShader) {
             this.rm_Vertex = this.getAttrib('rm_Vertex');
             this.rm_TexCoord0 = this.getAttrib('rm_TexCoord0');
             this.sTexture = this.getUniform('sTexture');
+            this.rm_Normal = -1;
         }
     }
 

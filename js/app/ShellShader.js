@@ -27,7 +27,7 @@ define(['framework/BaseShader'], function(BaseShader) {
                 '\r\n' +
                 'void main( void )\r\n' +
                 '{\r\n' +
-                '    float f = float(gl_InstanceID*1) * 2.0;\r\n' +
+                '    float f = float(gl_InstanceID+1) * 2.0;\r\n' +
                 '    float layerCoeff = float(gl_InstanceID) / layersCount;\r\n' +
                 '    vec4 vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f, f, f, 0.0);\r\n' +
                 '\r\n' +
