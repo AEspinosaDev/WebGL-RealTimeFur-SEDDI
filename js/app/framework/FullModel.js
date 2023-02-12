@@ -50,66 +50,113 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
         loadJson: function (url, callback) {
             var root = this;
 
-            function precomputeFinGeometry(indices, vertices, normals) {
+            function precomputeFinGeometry(indices, vertices, normals,tangents) {
                 var indexList = [].concat.apply([], indices);
                 var finIndices = new Array();
                 var finVertices = new Array();
-                // var finUVS = new Array();
-                // var finNormals = new Array();
+                var finExtrudables = new Array();
+                var finNormals = new Array();
+                var finTangents = new Array();
                 var newIndex = 0;
-                var vertIndex = 0;
                 //Ir indice por indice de dos en dos creando a su vez otros dos puntos
                 for (let i = 0; i < indexList.length; i++) {
-                    finIndices.push(newIndex); finIndices.push(newIndex + 1); finIndices.push(newIndex + 2); finIndices.push(newIndex); finIndices.push(newIndex + 2); finIndices.push(newIndex + 3);
-                    for (let c = 0; c < 4; c++) {
-                        if (c < 2) {
-                            //verticesPos
-                            for (let j = 0; j < 3; j++) {
-                                finVertices.push(vertices[vertIndex + j]);
-                            }
-                            vertIndex += 3;
-                        } else {
-                            //extrudedPos
-                            vertIndex -= 3;
+                    finIndices.push(newIndex);
+                    finIndices.push(newIndex + 1);
+                    finIndices.push(newIndex + 2);
+                    finIndices.push(newIndex);
+                    finIndices.push(newIndex + 2);
+                    finIndices.push(newIndex + 3);
 
-                            var pos = MatrixUtils.vec3.create();
-                            var normal = MatrixUtils.vec3.create();
-                            var extrude = MatrixUtils.vec3.create();
-                            var newPos = MatrixUtils.vec3.create();
-                            MatrixUtils.vec3.set(pos, vertices[vertIndex], pos[1] = vertices[vertIndex + 1], pos[2] = vertices[vertIndex + 2]);
-                            MatrixUtils.vec3.set(extrude, 8.0, 8.0, 8.0);
-                            MatrixUtils.vec3.set(normal, normals[vertIndex], normal[1] = normals[vertIndex + 1], normal[2] = normals[vertIndex + 2]);
-                            //pos[0]=vertices[vertIndex];pos[1]=vertices[vertIndex+1];pos[2]=vertices[vertIndex+2];
-                            // normal[0]=normals[vertIndex];normal[1]=normals[vertIndex+1];normal[2]=normals[vertIndex+2];
-                            MatrixUtils.vec3.add(newPos, pos, MatrixUtils.vec3.multiply(normal, normal, extrude));
-                            for (let j = 0; j < 3; j++) {
-                                finVertices.push(newPos[j]);
-                            }
-
-                        }
-
-                    }
                     newIndex += 4;
-                    vertIndex += 6;
 
                 }
+                for (let f = 0; f < (vertices.length / 3) / 4; f++) {
+                    var duplas = new Array();
+                    var offset = f*12;
+                    duplas.push([0, 1]);
+                    duplas.push([1, 2]);
+                    duplas.push([2, 3]);
+                    duplas.push([3, 0]);
+                    duplas.push([3, 1]);
+                    duplas.push([2, 0]);
+
+                    for (let i = 0; i < duplas.length; i++) {
+                        //verticesPos
+                        for (let j = 0; j < 3; j++) {
+                            finVertices.push(vertices[duplas[i][0] * 3+offset + j]);
+                            finNormals.push(normals[duplas[i][0] * 3+offset + j]);
+                            finTangents.push(tangents[duplas[i][0] * 3+offset + j]);
+                        }
+                        finExtrudables.push(0);
+                        for (let j = 0; j < 3; j++) {
+                            finVertices.push(vertices[duplas[i][1] * 3+offset + j]);
+                            finNormals.push(normals[duplas[i][1] * 3+offset + j]);
+                            finTangents.push(tangents[duplas[i][1] * 3+offset + j]);
+                        }
+                        finExtrudables.push(0);
+                        for (let j = 0; j < 3; j++) {
+                            finVertices.push(vertices[duplas[i][1] * 3+offset + j]);
+                            finNormals.push(normals[duplas[i][1] * 3+offset + j]);
+                            finTangents.push(tangents[duplas[i][1] * 3+offset + j]);
+                        }
+                        finExtrudables.push(1);
+                        for (let j = 0; j < 3; j++) {
+                            finVertices.push(vertices[duplas[i][0] * 3+offset + j]);
+                            finNormals.push(normals[duplas[i][0] * 3+offset + j]);
+                            finTangents.push(tangents[duplas[i][0] * 3+offset + j]);
+                        }
+                        finExtrudables.push(1);
+                        // //extrudedPos
+                        // var pos = MatrixUtils.vec3.create();
+                        // var normal = MatrixUtils.vec3.create();
+                        // var extrude = MatrixUtils.vec3.create();
+                        // var newPos = MatrixUtils.vec3.create();
+                        // MatrixUtils.vec3.set(extrude, 4.0, 4.0, 4.0);
+                        // MatrixUtils.vec3.set(pos, vertices[duplas[i][1] * 3+offset], vertices[duplas[i][1] * 3 + 1+offset], vertices[duplas[i][1] * 3 + 2+offset]);
+                        // MatrixUtils.vec3.set(normal, normals[duplas[i][1] * 3+offset], normals[duplas[i][1] * 3 + 1+offset], normals[duplas[i][1] * 3 + 2+offset]);
+                        // MatrixUtils.vec3.add(newPos, pos, MatrixUtils.vec3.multiply(normal, normal, extrude));
+                        // for (let j = 0; j < 3; j++) {
+                        //     finVertices.push(newPos[j]);
+                        // }
+                        // MatrixUtils.vec3.set(pos, vertices[duplas[i][0] * 3+offset], vertices[duplas[i][0] * 3 + 1+offset], vertices[duplas[i][0] * 3 + 2+offset]);
+                        // MatrixUtils.vec3.set(normal, normals[duplas[i][0] * 3+offset], normals[duplas[i][0] * 3 + 1+offset], normals[duplas[i][0] * 3 + 2+offset]);
+                        // MatrixUtils.vec3.add(newPos, pos, MatrixUtils.vec3.multiply(normal, normal, extrude));
+                        // for (let j = 0; j < 3; j++) {
+                        //     finVertices.push(newPos[j]);
+                        // }
+
+
+                    }
+
+                    //posIndex = (posIndex + 3) % vertices.length;
+                }
+
+                console.log(finIndices);
 
                 //BIND FIN BUFFERS
                 root.finBufferIdices = gl.createBuffer();
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, root.finBufferIdices);
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexList), gl.STATIC_DRAW);
-                root.numFinIndices = indexList.length;
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(finIndices), gl.STATIC_DRAW);
+                root.numFinIndices = finIndices.length;
 
                 root.finBufferPos = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, root.finBufferPos);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finVertices), gl.STATIC_DRAW);
                 console.log(finVertices);
-                // root.UVs = gl.createBuffer();
-                // gl.bindBuffer(gl.ARRAY_BUFFER, root.UVs);
-                // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].texturecoords[0]), gl.STATIC_DRAW);
-                // root.bufferNormals = gl.createBuffer();
-                // gl.bindBuffer(gl.ARRAY_BUFFER, root.bufferNormals);
-                // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].normals), gl.STATIC_DRAW);
+                
+                root.finBufferNormals = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, root.finBufferNormals);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finNormals), gl.STATIC_DRAW);
+
+                root.finBufferTangents = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, root.finBufferTangents);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finTangents), gl.STATIC_DRAW);
+                
+                
+                console.log(finExtrudables);
+                root.finExtrudableBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, root.finExtrudableBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finExtrudables), gl.STATIC_DRAW);
             }
 
             JsonDataLoader.load(url,
@@ -141,7 +188,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].normals), gl.STATIC_DRAW);
 
                     //Precompute fins ->
-                    precomputeFinGeometry(data.meshes[0].faces, data.meshes[0].vertices, data.meshes[0].normals);
+                    precomputeFinGeometry(data.meshes[0].faces, data.meshes[0].vertices, data.meshes[0].normals,data.meshes[0].tangents);
 
 
                     root.bufferIndices && root.bufferStrides && callback();
@@ -158,7 +205,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferIndices);
         },
-        
+
         bindBuffersExtended: function (shader) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferIndices);
             gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides);
@@ -183,11 +230,18 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             gl.enableVertexAttribArray(shader.rm_Vertex);
             gl.vertexAttribPointer(shader.rm_Vertex, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 
-            // gl.bindBuffer(gl.ARRAY_BUFFER, this.UVs);
-            // gl.enableVertexAttribArray(shader.rm_TexCoord0);
-            // gl.vertexAttribPointer(shader.rm_TexCoord0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferNormals);
+            gl.enableVertexAttribArray(shader.rm_Normal);
+            gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 
-           
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferTangents);
+            gl.enableVertexAttribArray(shader.rm_Tangent);
+            gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.finExtrudableBuffer);
+            gl.enableVertexAttribArray(shader.rm_Extrudable);
+            gl.vertexAttribPointer(shader.rm_Extrudable, 1, gl.FLOAT, false,Float32Array.BYTES_PER_ELEMENT, 0);
+
 
         },
 

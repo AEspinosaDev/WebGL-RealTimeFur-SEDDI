@@ -1,0 +1,187 @@
+{
+	 "rootnode": {
+		 "name": "RootNode"
+		,"transformation": [
+			 1
+			,0
+			,0
+			,0
+			,0
+			,1
+			,0
+			,0
+			,0
+			,0
+			,1
+			,0
+			,0
+			,0
+			,0
+			,1
+		]
+		,"children": [
+			{
+				 "name": "Box001_$AssimpFbx$_PreRotation"
+				,"transformation": [
+					 1
+					,0
+					,0
+					,0
+					,0
+					,-4.37114e-008
+					,1
+					,0
+					,0
+					,-1
+					,-4.37114e-008
+					,0
+					,0
+					,0
+					,0
+					,1
+				]
+				,"children": [
+					{
+						 "name": "Box001"
+						,"transformation": [
+							 1
+							,0
+							,0
+							,0
+							,0
+							,1
+							,0
+							,0
+							,0
+							,0
+							,1
+							,0
+							,0
+							,0
+							,0
+							,1
+						]
+						,"meshes": [
+							 0
+						]
+					}
+				]
+			}
+		]
+	}
+	,"flags": 8
+	,"meshes": [
+		{
+			 "name": ""
+			,"materialindex": 0
+			,"primitivetypes": 4
+			,"vertices": [
+				 -17.5
+				,-17.5
+				,35
+				,17.5
+				,-17.5
+				,35
+				,17.5
+				,17.5
+				,35
+				,-17.5
+				,17.5
+				,35
+			]
+			,"normals": [
+				 0
+				,0
+				,1
+				,0
+				,0
+				,1
+				,0
+				,0
+				,1
+				,0
+				,0
+				,1
+			]
+			,"tangents": [
+				 1
+				,0
+				,0
+				,1
+				,0
+				,0
+				,1
+				,0
+				,0
+				,1
+				,0
+				,0
+			]
+			,"bitangents": [
+				 0
+				,-1
+				,0
+				,0
+				,-1
+				,0
+				,0
+				,-1
+				,0
+				,0
+				,-1
+				,0
+			]
+			,"numuvcomponents": [
+				 2
+			]
+			,"texturecoords": [
+				[
+					 0
+					,0
+					,1
+					,0
+					,1
+					,1
+					,0
+					,1
+				]
+			]
+			,"faces": [
+				[
+					 0
+					,1
+					,2
+				]
+				,[
+					 0
+					,2
+					,3
+				]
+			]
+		}
+	]
+	,"materials": [
+		{
+			 "properties": [
+				{
+					 "key": "$clr.diffuse"
+					,"semantic": 0
+					,"index": 0
+					,"type": 1
+					,"value": [
+						 0.8
+						,0.8
+						,0.8
+					]
+				}
+				,{
+					 "key": "?mat.name"
+					,"semantic": 0
+					,"index": 0
+					,"type": 3
+					,"value": "DefaultMaterial"
+				}
+			]
+		}
+	]
+}

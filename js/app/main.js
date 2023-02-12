@@ -80,10 +80,14 @@ define([
             $('#sliderThickness').on('change', function(e) {
                 renderer.thickness = e.value.newValue;
             });
+            $('#sliderSize').on('change', function(e) {
+                renderer.size = e.value.newValue;
+            });
 
             renderer.onPresetLoaded = function() {
                 $('#sliderLayers').slider('setValue', renderer.layers);
                 $('#sliderThickness').slider('setValue', renderer.thickness);
+                $('#sliderSize').slider('setValue', renderer.size);
 
                 clearTimeout(timeoutHideName);
                 $('#presetName')

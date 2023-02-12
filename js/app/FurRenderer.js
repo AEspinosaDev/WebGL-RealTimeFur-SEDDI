@@ -129,9 +129,12 @@ define([
 
                 this.modelCube = new FullModel();
                 //this.modelCube.load('data/models/box10_rounded', boundUpdateCallback);
-                //this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
-                // this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
-                this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
+                 this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
+                //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
+                //this.modelCube.loadJson('data/models/plane.json', boundUpdateCallback);
+                //this.modelCube.loadJson('data/models/standford_bunny.json', boundUpdateCallback);
+                 //this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
+                //this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
 
                 // this.textureChecker = UncompressedTextureLoader.load('data/textures/checker.png', boundUpdateCallback);
                 this.textureBackground = UncompressedTextureLoader.load('data/textures/bg-gradient.png', boundUpdateCallback);
@@ -333,7 +336,7 @@ define([
                 this.shaderShell.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
                 this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
-                this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
+                // this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
                 
                 this.shaderFin.use();
                 //Set up textures
@@ -341,13 +344,7 @@ define([
             }
 
             drawDiffuseNormalStrideVBOTranslatedRotatedScaled(shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
-                // model.bindBuffers();
-
-                // gl.enableVertexAttribArray(shader.rm_Vertex);
-                // gl.enableVertexAttribArray(shader.rm_TexCoord0);
-
-                // gl.vertexAttribPointer(shader.rm_Vertex, 3, gl.FLOAT, false, 4 * (3 + 2 + 3), 0);
-                // gl.vertexAttribPointer(shader.rm_TexCoord0, 2, gl.FLOAT, false, 4 * (3 + 2 + 3), 4 * (3));
+               
                 
                 model.bindBuffersExtended(shader);
                 
@@ -362,15 +359,7 @@ define([
                 var a = Math.sin(this.windTimer * 6.2831852) / 2 + 0.5,
                     scale = preset.waveScale * 0.4 + (a * preset.waveScale * 0.6);
                 
-                // model.bindBuffers();
-                
-                // gl.enableVertexAttribArray(shader.rm_Vertex);
-                // gl.enableVertexAttribArray(shader.rm_TexCoord0);
-                // gl.enableVertexAttribArray(shader.rm_Normal);
-                
-                // gl.vertexAttribPointer(shader.rm_Vertex, 3, gl.FLOAT, false, 4 * (3 + 2 + 3), 0);
-                // gl.vertexAttribPointer(shader.rm_TexCoord0, 2, gl.FLOAT, false, 4 * (3 + 2 + 3), 4 * (3));
-                // gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false, 4 * (3 + 2 + 3), 4 * (3 + 2));
+              
                 model.bindBuffersExtended(shader);
 
                 this.calculateMVPMatrix(tx, ty, tz, rx, ry, rz, sx, sy, sz);
@@ -393,10 +382,10 @@ define([
                 this.calculateMVPMatrix(tx, ty, tz, rx, ry, rz, sx, sy, sz);
 
                 gl.uniformMatrix4fv(shader.view_proj_matrix, false, this.mMVPMatrix);
-                // gl.uniform1i(shader.numOfVertices,model.getNumIndices()*2);
+                gl.uniform1f(shader.layerThickness, preset.thickness);
+                gl.uniform1f(shader.layersCount, preset.layers);
 
                 gl.drawElements(gl.TRIANGLES, model.numFinIndices, gl.UNSIGNED_SHORT, 0);
-                // gl.drawArrays(gl.TRIANGLES, 0, model.getNumIndices()*2); //We multiply by two because we extrude each 
 
             }
 

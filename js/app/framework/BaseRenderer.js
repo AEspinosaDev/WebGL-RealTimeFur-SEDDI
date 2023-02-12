@@ -18,6 +18,7 @@ define([
             MatrixUtils.mat4.ortho(this.matOrtho, -1, 1, -1, 1, 2.0, 250);
 
             this.boundTick = this.tick.bind(this);
+            this.size = 1;
         }
 
         /**
@@ -78,6 +79,7 @@ define([
             MatrixUtils.mat4.rotate(this.mMMatrix, this.mMMatrix, 0, [1, 0, 0]);
             MatrixUtils.mat4.translate(this.mMMatrix, this.mMMatrix, [tx, ty, tz]);
             MatrixUtils.mat4.scale(this.mMMatrix, this.mMMatrix, [sx, sy, sz]);
+            MatrixUtils.mat4.scale(this.mMMatrix, this.mMMatrix, [this.size, this.size, this.size]);
             MatrixUtils.mat4.rotateX(this.mMMatrix, this.mMMatrix, rx);
             MatrixUtils.mat4.rotateY(this.mMMatrix, this.mMMatrix, ry);
             MatrixUtils.mat4.rotateZ(this.mMMatrix, this.mMMatrix, rz);
