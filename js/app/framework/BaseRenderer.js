@@ -11,6 +11,7 @@ define([
         function BaseRenderer() {
             this.mMMatrix = MatrixUtils.mat4.create();
             this.mVMatrix = MatrixUtils.mat4.create();
+            this.mMVMatrix = MatrixUtils.mat4.create();
             this.mMVPMatrix = MatrixUtils.mat4.create();
             this.mProjMatrix = MatrixUtils.mat4.create();
 
@@ -83,8 +84,8 @@ define([
             MatrixUtils.mat4.rotateX(this.mMMatrix, this.mMMatrix, rx);
             MatrixUtils.mat4.rotateY(this.mMMatrix, this.mMMatrix, ry);
             MatrixUtils.mat4.rotateZ(this.mMMatrix, this.mMMatrix, rz);
-            MatrixUtils.mat4.multiply(this.mMVPMatrix, this.mVMatrix, this.mMMatrix);
-            MatrixUtils.mat4.multiply(this.mMVPMatrix, this.mProjMatrix, this.mMVPMatrix);
+            MatrixUtils.mat4.multiply(this.mMVMatrix, this.mVMatrix, this.mMMatrix);
+            MatrixUtils.mat4.multiply(this.mMVPMatrix, this.mProjMatrix, this.mMVMatrix);
         }
 
         /**

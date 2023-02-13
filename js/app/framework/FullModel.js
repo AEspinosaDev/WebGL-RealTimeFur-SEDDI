@@ -153,7 +153,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finTangents), gl.STATIC_DRAW);
                 
                 
-                console.log(finExtrudables);
+                console.log(finNormals);
                 root.finExtrudableBuffer = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, root.finExtrudableBuffer);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finExtrudables), gl.STATIC_DRAW);

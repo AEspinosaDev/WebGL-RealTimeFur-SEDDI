@@ -129,11 +129,11 @@ define([
 
                 this.modelCube = new FullModel();
                 //this.modelCube.load('data/models/box10_rounded', boundUpdateCallback);
-                 this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
+                //  this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/plane.json', boundUpdateCallback);
-                //this.modelCube.loadJson('data/models/standford_bunny.json', boundUpdateCallback);
-                 //this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
+                this.modelCube.loadJson('data/models/standford_bunny.json', boundUpdateCallback);
+                //  this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
 
                 // this.textureChecker = UncompressedTextureLoader.load('data/textures/checker.png', boundUpdateCallback);
@@ -322,25 +322,25 @@ define([
                 this.shaderDiffuseColored.use();
                 this.setTexture2D(0, texture, this.shaderDiffuseColored.sTexture);
                 gl.uniform4f(this.shaderDiffuseColored.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
-                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuseColored, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
+                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuseColored, this.modelCube, 0, 0, 0, 0,this.angleYaw,this.angleYaw, 1, 1, 1);
             }
 
             drawLoadingCube() {
                 this.shaderDiffuseColored.use();
                 this.setTexture2D(0, this.textureChecker, this.shaderDiffuseColored.sTexture);
                 gl.uniform4f(this.shaderDiffuseColored.color, 0.8, 0.8, 0.8, 1);
-                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuseColored, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
+                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuseColored, this.modelCube, 0, 0, 0, 0,this.angleYaw,this.angleYaw, 1, 1, 1);
             }
 
             drawFur(textureDiffuse, textureAlpha, preset) {
                 this.shaderShell.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
                 this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
-                // this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
+                //this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, this.angleYaw, this.angleYaw, 1, 1, 1);
                 
                 this.shaderFin.use();
                 //Set up textures
-                this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
+                this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, this.angleYaw,this.angleYaw, 1, 1, 1);
             }
 
             drawDiffuseNormalStrideVBOTranslatedRotatedScaled(shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
@@ -382,8 +382,11 @@ define([
                 this.calculateMVPMatrix(tx, ty, tz, rx, ry, rz, sx, sy, sz);
 
                 gl.uniformMatrix4fv(shader.view_proj_matrix, false, this.mMVPMatrix);
+                gl.uniformMatrix4fv(shader.view_matrix, false, this.mVMatrix);
+                gl.uniformMatrix4fv(shader.view_model_matrix, false, this.mMVMatrix);
                 gl.uniform1f(shader.layerThickness, preset.thickness);
                 gl.uniform1f(shader.layersCount, preset.layers);
+                gl.uniform3f(shader.eyePos,this.mVMatrix[12],this.mVMatrix[13],this.mVMatrix[14]);
 
                 gl.drawElements(gl.TRIANGLES, model.numFinIndices, gl.UNSIGNED_SHORT, 0);
 
