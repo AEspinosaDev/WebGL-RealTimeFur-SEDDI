@@ -59,6 +59,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  p = 1.0-p;\n' +
                 '  float alpha = max(0.0,2.0*abs(p)-1.0);\n' +
                 '  outColor =vec4(1, 0, 0, alpha);\n' +
+                // '  outColor =vec4(1, 0, 0, 1);\n' +
 
                 '}';
         }

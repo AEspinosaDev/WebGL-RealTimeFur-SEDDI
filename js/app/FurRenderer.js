@@ -129,12 +129,12 @@ define([
 
                 this.modelCube = new FullModel();
                 //this.modelCube.load('data/models/box10_rounded', boundUpdateCallback);
-                //  this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
+                // this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/plane.json', boundUpdateCallback);
-                this.modelCube.loadJson('data/models/standford_bunny.json', boundUpdateCallback);
+                //this.modelCube.loadJson('data/models/standford_bunny.json', boundUpdateCallback);
                 //  this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
-                //this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
+                this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
 
                 // this.textureChecker = UncompressedTextureLoader.load('data/textures/checker.png', boundUpdateCallback);
                 this.textureBackground = UncompressedTextureLoader.load('data/textures/bg-gradient.png', boundUpdateCallback);
