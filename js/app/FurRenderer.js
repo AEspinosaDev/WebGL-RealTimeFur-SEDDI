@@ -1,20 +1,20 @@
 'use strict';
 
 define([
-        'framework/BaseRenderer',
-        'jquery',
-        'ShellShader',
-        'DiffuseShader',
-        'FinShader',
-        'DiffuseColoredShader',
-        'framework/utils/MatrixUtils',
-        'framework/FullModel',
-        'framework/UncompressedTextureLoader',
-        'framework/CompressedTextureLoader',
-        'FurPresets',
-        'VignetteData'
-    ],
-    function(
+    'framework/BaseRenderer',
+    'jquery',
+    'ShellShader',
+    'DiffuseShader',
+    'FinShader',
+    'DiffuseColoredShader',
+    'framework/utils/MatrixUtils',
+    'framework/FullModel',
+    'framework/UncompressedTextureLoader',
+    'framework/CompressedTextureLoader',
+    'FurPresets',
+    'VignetteData'
+],
+    function (
         BaseRenderer,
         $,
         ShellShader,
@@ -47,7 +47,7 @@ define([
                 this.matOrtho = MatrixUtils.mat4.create();
                 MatrixUtils.mat4.ortho(this.matOrtho, -1, 1, -1, 1, 2.0, 250);
 
-                this.ITEMS_TO_LOAD = 4; // total number of OpenGL buffers+textures to load
+                this.ITEMS_TO_LOAD = 5; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
                 this.TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * this.FLOAT_SIZE_BYTES;
                 this.TRIANGLE_VERTICES_DATA_POS_OFFSET = 0;
@@ -129,10 +129,10 @@ define([
 
                 this.modelCube = new FullModel();
                 //this.modelCube.load('data/models/box10_rounded', boundUpdateCallback);
-                // this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
+                //this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/plane.json', boundUpdateCallback);
-                //this.modelCube.loadJson('data/models/standford_bunny.json', boundUpdateCallback);
+                //this.modelCube.loadJson('data/models/bunny.json', boundUpdateCallback);
                 //  this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
                 this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
 
@@ -143,12 +143,14 @@ define([
 
                 this.textureFurDiffuse = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('diffuseTexture'), boundUpdateCallback);
                 this.textureFurAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('alphaTexture'), boundUpdateCallback);
+                this.textureFinAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('finAlphaTexture'), boundUpdateCallback);
+
 
                 this.vignette = new VignetteData();
                 this.vignette.initGL(gl);
             }
 
-           
+
 
             getCurrentPresetParameter(param) {
                 return this.currentPreset[param];
@@ -193,7 +195,7 @@ define([
                 this.nextPreset = preset;
                 this.loadingNextFur = true;
 
-                root.loadNextFurTextures(function() {
+                root.loadNextFurTextures(function () {
                     counter++;
                     if (counter == 2) {
                         root.loadingNextFur = false;
@@ -289,11 +291,13 @@ define([
 
                 this.drawCubeDiffuse(this.textureFurDiffuse, this.currentPreset);
 
+                gl.depthMask(false);
                 gl.disable(gl.CULL_FACE);
+
                 gl.enable(gl.BLEND);
                 // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); // too dim
                 // gl.blendFunc(gl.SRC_ALPHA, gl.ONE); // too bright
-                gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
+                // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
 
                 this.drawFur(this.textureFurDiffuse, this.textureFurAlpha, this.currentPreset);
 
@@ -322,51 +326,59 @@ define([
                 this.shaderDiffuseColored.use();
                 this.setTexture2D(0, texture, this.shaderDiffuseColored.sTexture);
                 gl.uniform4f(this.shaderDiffuseColored.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
-                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuseColored, this.modelCube, 0, 0, 0, 0,this.angleYaw,this.angleYaw, 1, 1, 1);
+                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuseColored, this.modelCube, 0, 0, 0, 0, this.angleYaw, this.angleYaw, 1, 1, 1);
             }
 
             drawLoadingCube() {
                 this.shaderDiffuseColored.use();
                 this.setTexture2D(0, this.textureChecker, this.shaderDiffuseColored.sTexture);
                 gl.uniform4f(this.shaderDiffuseColored.color, 0.8, 0.8, 0.8, 1);
-                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuseColored, this.modelCube, 0, 0, 0, 0,this.angleYaw,this.angleYaw, 1, 1, 1);
+                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuseColored, this.modelCube, 0, 0, 0, 0, this.angleYaw, this.angleYaw, 1, 1, 1);
             }
 
             drawFur(textureDiffuse, textureAlpha, preset) {
+                this.shaderFin.use();
+                this.setTexture2D(0, textureDiffuse, this.shaderFin.diffuseMap);
+                this.setTexture2D(1, this.textureFinAlpha, this.shaderFin.alphaMap);
+                //Set up textures
+                this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, this.angleYaw, this.angleYaw, 1, 1, 1);
+
+                gl.depthMask(true);
+                // gl.enable(gl.BLEND);
+                gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
+
+
                 this.shaderShell.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
                 this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
-                //this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, this.angleYaw, this.angleYaw, 1, 1, 1);
-                
-                this.shaderFin.use();
-                //Set up textures
-                this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, this.angleYaw,this.angleYaw, 1, 1, 1);
+                this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, this.angleYaw, this.angleYaw, 1, 1, 1);
+
             }
 
             drawDiffuseNormalStrideVBOTranslatedRotatedScaled(shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
-               
-                
+
+
                 model.bindBuffersExtended(shader);
-                
+
                 this.calculateMVPMatrix(tx, ty, tz, rx, ry, rz, sx, sy, sz);
-                
+
                 gl.uniformMatrix4fv(shader.view_proj_matrix, false, this.mMVPMatrix);
                 // gl.drawElements(gl.TRIANGLES, model.getNumIndices() * 3, gl.UNSIGNED_SHORT, 0);
                 gl.drawElements(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0);
             }
-            
+
             drawShellsVBOTranslatedRotatedScaledInstanced(preset, shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
                 var a = Math.sin(this.windTimer * 6.2831852) / 2 + 0.5,
                     scale = preset.waveScale * 0.4 + (a * preset.waveScale * 0.6);
-                
-              
+
+
                 model.bindBuffersExtended(shader);
 
                 this.calculateMVPMatrix(tx, ty, tz, rx, ry, rz, sx, sy, sz);
 
                 gl.uniformMatrix4fv(shader.view_proj_matrix, false, this.mMVPMatrix);
                 gl.uniform1f(shader.layerThickness, preset.thickness);
-                gl.uniform1f(shader.layersCount,preset.layers);
+                gl.uniform1f(shader.layersCount, preset.layers);
                 gl.uniform4f(shader.colorStart, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
                 gl.uniform4f(shader.colorEnd, preset.endColor[0], preset.endColor[1], preset.endColor[2], preset.endColor[3]);
                 gl.uniform1f(shader.time, this.furTimer);
@@ -375,8 +387,8 @@ define([
                 gl.drawElementsInstanced(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0, preset.layers);
 
             }
-            drawFinsVBOTranslatedRotatedScaled(preset, shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz){
-                
+            drawFinsVBOTranslatedRotatedScaled(preset, shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
+
                 model.bindFinsBuffersExtended(shader);
 
                 this.calculateMVPMatrix(tx, ty, tz, rx, ry, rz, sx, sy, sz);
@@ -384,9 +396,11 @@ define([
                 gl.uniformMatrix4fv(shader.view_proj_matrix, false, this.mMVPMatrix);
                 gl.uniformMatrix4fv(shader.view_matrix, false, this.mVMatrix);
                 gl.uniformMatrix4fv(shader.view_model_matrix, false, this.mMVMatrix);
+                gl.uniform4f(shader.colorStart, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
+                gl.uniform4f(shader.colorEnd, preset.endColor[0], preset.endColor[1], preset.endColor[2], preset.endColor[3]);
                 gl.uniform1f(shader.layerThickness, preset.thickness);
                 gl.uniform1f(shader.layersCount, preset.layers);
-                gl.uniform3f(shader.eyePos,this.mVMatrix[12],this.mVMatrix[13],this.mVMatrix[14]);
+                gl.uniform3f(shader.eyePos, this.mVMatrix[12], this.mVMatrix[13], this.mVMatrix[14]);
 
                 gl.drawElements(gl.TRIANGLES, model.numFinIndices, gl.UNSIGNED_SHORT, 0);
 

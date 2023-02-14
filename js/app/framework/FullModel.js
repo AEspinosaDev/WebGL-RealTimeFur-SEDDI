@@ -19,11 +19,9 @@ class Edge {
         var pts = new Array();
         pts.push(this.a_ID); pts.push(this.b_ID);
         pts = pts.sort((a, b) => { return a - b; });
-        // Cantor pairing
-        // var hcode = ((pts[0] + pts[1]) * (pts[0] + pts[1] + 1)) / 2 + pts[1];
-        // Szudzik pairing
-        var hcode = (pts[0] >= pts[1] ? (pts[0] * pts[0]) + pts[0] + pts[1] : (pts[1] * pts[1]) + pts[0]);
-        console.log("harch=" + hcode);
+        // var hcode = ((pts[0] + pts[1]) * (pts[0] + pts[1] + 1)) / 2 + pts[1]; // Cantor pairing
+        var hcode = (pts[0] >= pts[1] ? (pts[0] * pts[0]) + pts[0] + pts[1] : (pts[1] * pts[1]) + pts[0]); // Szudzik pairing
+        // console.log("hash=" + hcode);
         return hcode;
 
     }
@@ -95,10 +93,11 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 var finExtrudables = new Array();
                 var finNormals = new Array();
                 var finTangents = new Array();
+                var finUVs = new Array();
                 var newIndex = 0;
 
 
-                //////NEW STUFF ///////////////////
+                ////// NEW STUFF ///////////////////
                 var auxVertices = new Array();
                 var auxEdges = new Array();
                 var edgeMap = new Map();
@@ -113,24 +112,16 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                     edges.push(new Edge(indexList[i + 1], indexList[i + 2], indexList[i]));
                     edges.push(new Edge(indexList[i], indexList[i + 2], indexList[i + 1]));
                     edges.forEach(edge => {
-                        if (edgeMap.has(edge.hash)) {
-                            // La arista está en el diccionario
-                            // var otherEdge = edgeMap.get(edge.hash);
-                            // otherEdge.a_ID = otherEdge.o_ID;
-                            // otherEdge.b_ID = edge.o_ID;
-                            // auxEdges.push(otherEdge);
-                        }
-                        else {
-
+                        if (!edgeMap.has(edge.hash)) {
                             //La arista no está en el diccionario
                             auxEdges.push(edge);
                             edgeMap.set(edge.hash, edge);
                         }
-
+                        
                     });
                 }
-                console.log(edgeMap);
-                console.log(auxEdges);
+                // console.log(edgeMap);
+                // console.log(auxEdges);
                 for (let i = 0; i < auxEdges.length; i++) {
                     //Aqui se crean los fins. Empezamos a meter en el array de fins indices indices nuevos
                     finIndices.push(newIndex);
@@ -140,32 +131,46 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                     finIndices.push(newIndex + 2);
                     finIndices.push(newIndex + 3);
                     newIndex += 4;
+                    //uv RANDOM offset
+                    var offset = Math.floor(Math.random() * (0.85 - 0.0 + 1) + 0.0);
+
+                    //LAS UVS DE LOS FINS DEBERÍAN ESCALAS CON LOS EDGES LENGTH////////////////////////
+
                     //Se duplican los vertices de cada edge para asin crear mas geometría
                     for (let j = 0; j < 3; j++) {
                         finVertices.push(auxVertices[auxEdges[i].a_ID].pos[j]);
                         finNormals.push(auxVertices[auxEdges[i].a_ID].normal[j]);
+                        
                     }
+                    finUVs.push(-offset);
+                    finUVs.push(-0.5);
                     finExtrudables.push(0);
                     for (let j = 0; j < 3; j++) {
                         finVertices.push(auxVertices[auxEdges[i].b_ID].pos[j]);
                         finNormals.push(auxVertices[auxEdges[i].b_ID].normal[j]);
                     }
+                    finUVs.push(-offset-0.15);
+                    finUVs.push(-0.5);
                     finExtrudables.push(0);
                     for (let j = 0; j < 3; j++) {
                         finVertices.push(auxVertices[auxEdges[i].b_ID].pos[j]);
                         finNormals.push(auxVertices[auxEdges[i].b_ID].normal[j]);
                     }
+                    finUVs.push(-offset-0.15);
+                    finUVs.push(-0.55);
                     finExtrudables.push(1);
                     for (let j = 0; j < 3; j++) {
                         finVertices.push(auxVertices[auxEdges[i].a_ID].pos[j]);
                         finNormals.push(auxVertices[auxEdges[i].a_ID].normal[j]);
                     }
+                    finUVs.push(-offset);
+                    finUVs.push(-0.55);
                     finExtrudables.push(1);
 
                 }
 
                
-                console.log(finIndices);
+                // console.log(finIndices);
 
                 //BIND FIN BUFFERS
                 root.finBufferIdices = gl.createBuffer();
@@ -176,7 +181,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 root.finBufferPos = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, root.finBufferPos);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finVertices), gl.STATIC_DRAW);
-                console.log(finVertices);
+                // console.log(finVertices);
 
                 root.finBufferNormals = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, root.finBufferNormals);
@@ -186,8 +191,12 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 gl.bindBuffer(gl.ARRAY_BUFFER, root.finBufferTangents);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finTangents), gl.STATIC_DRAW);
 
+                root.finUVs = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, root.finUVs);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finUVs), gl.STATIC_DRAW);
 
-                console.log(finNormals);
+
+                // console.log(finNormals);
                 root.finExtrudableBuffer = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, root.finExtrudableBuffer);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finExtrudables), gl.STATIC_DRAW);
@@ -199,7 +208,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                     console.log('Loaded ' + url + 'JSON');
 
                     var indexList = [].concat.apply([], data.meshes[0].faces);
-                    console.log(indexList);
+                    // console.log(indexList);
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, root.bufferIndices);
                     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexList), gl.STATIC_DRAW);
                     root.numIndices = indexList.length;
@@ -213,7 +222,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                     root.bufferStrides = gl.createBuffer();
                     gl.bindBuffer(gl.ARRAY_BUFFER, root.bufferStrides);
                     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].vertices), gl.STATIC_DRAW);
-                    console.log(data.meshes[0].vertices);
+                    // console.log(data.meshes[0].vertices);
                     root.UVs = gl.createBuffer();
                     gl.bindBuffer(gl.ARRAY_BUFFER, root.UVs);
                     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].texturecoords[0]), gl.STATIC_DRAW);
@@ -271,6 +280,10 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             // gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferTangents);
             // gl.enableVertexAttribArray(shader.rm_Tangent);
             // gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.finUVs);
+            gl.enableVertexAttribArray(shader.rm_TexCoord0);
+            gl.vertexAttribPointer(shader.rm_TexCoord0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.finExtrudableBuffer);
             gl.enableVertexAttribArray(shader.rm_Extrudable);

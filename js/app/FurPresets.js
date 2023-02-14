@@ -11,6 +11,7 @@ define(function() {
         'waveScale': 0.5,
         'diffuseTexture': 'fur-leo.png',
         'alphaTexture': 'uneven-alpha.png',
+        'finAlphaTexture': 'hairs-alpha.png',
         'startColor': [0.6, 0.6, 0.6, 1.0],
         'endColor': [1.0, 1.0, 1.0, 0.0]
     }, {

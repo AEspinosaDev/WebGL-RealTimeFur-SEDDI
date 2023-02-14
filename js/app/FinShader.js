@@ -21,12 +21,15 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform int numOfVertices;\n' +
                 'uniform float layerThickness;\n' +
                 'uniform float layersCount;\n' +
+                'uniform vec4 colorStart;\r\n' +
+                'uniform vec4 colorEnd;\r\n' +
                 'out vec2 vTextureCoord;\n' +
                 'out vec3 finNormal;\n' +
                 'out vec3 vPos;\n' +
+                'out vec4 vAO;\r\n' +
                 '\n' +
                 'void main() {\n' +
-                '  float f = (layersCount-1.0) * layerThickness;\r\n' +
+                '  float f = layersCount * layerThickness;\r\n' +
                 '  vec4 vertex;\n' +
                 '  if(rm_Extrudable==1.0){\n' + //
                 '  vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f, f, f, 0.0);\n' +
@@ -41,7 +44,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 // '  finNormal = cross(n,t);\n' +
                 '  finNormal = n;\n' +
                 '  vPos =  (view_model_matrix * vertex).xyz;\n' +
-
+                '  vAO = mix(colorStart, colorEnd, rm_Extrudable);\r\n' +
                 '}';
 
             this.fragmentShaderCode = '#version 300 es\n' +
@@ -50,7 +53,9 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec3 finNormal;\n' +
                 'in vec3 vPos;\n' +
                 'in vec3 viewPos;\n' +
-                'uniform sampler2D sTexture;\n' +
+                'in vec4 vAO;\n' +
+                'uniform sampler2D diffuseMap;\n' +
+                'uniform sampler2D alphaMap;\n' +
                 'out vec4 outColor;\n' +
 
                 '\n' +
@@ -58,7 +63,12 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  float p = dot(normalize(-vPos),normalize(finNormal));\n' +
                 '  p = 1.0-p;\n' +
                 '  float alpha = max(0.0,2.0*abs(p)-1.0);\n' +
-                '  outColor =vec4(1, 0, 0, alpha);\n' +
+                '  alpha = alpha*texture(alphaMap, vTextureCoord).r;\n' +
+                '  vec4 color = texture(diffuseMap, vTextureCoord);\r\n' +
+                '  color*=vAO;\r\n' +
+                '  color.a = alpha;\r\n' +
+                // '  outColor =vec4(1, 0, 0, alpha);\n' +
+                '  outColor =color;\n' +
                 // '  outColor =vec4(1, 0, 0, 1);\n' +
 
                 '}';
@@ -78,6 +88,10 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.layerThickness = this.getUniform('layerThickness');
             this.layersCount = this.getUniform('layersCount');
             this.eyePos = this.getUniform('eyePos');
+            this.diffuseMap = this.getUniform('diffuseMap');
+            this.alphaMap = this.getUniform('alphaMap');
+            this.colorStart = this.getUniform('colorStart');
+            this.colorEnd = this.getUniform('colorEnd');
         }
     }
 
