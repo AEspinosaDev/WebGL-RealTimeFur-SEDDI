@@ -251,6 +251,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
 
         bindBuffersExtended: function (shader) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferIndices);
+            
             gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides);
             gl.enableVertexAttribArray(shader.rm_Vertex);
             gl.vertexAttribPointer(shader.rm_Vertex, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);

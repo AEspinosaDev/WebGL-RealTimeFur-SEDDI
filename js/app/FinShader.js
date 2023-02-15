@@ -23,9 +23,11 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform float layersCount;\n' +
                 'uniform vec4 colorStart;\r\n' +
                 'uniform vec4 colorEnd;\r\n' +
+                'uniform vec3 lightPos;\n' +
                 'out vec2 vTextureCoord;\n' +
                 'out vec3 finNormal;\n' +
                 'out vec3 vPos;\n' +
+                'out vec3 lightViewPos;\n' +
                 'out vec4 vAO;\r\n' +
                 '\n' +
                 'void main() {\n' +
@@ -37,11 +39,10 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vertex = rm_Vertex;}\n' +
                 '  gl_Position = view_proj_matrix * vertex;\n' +
                 '  vTextureCoord = rm_TexCoord0;\n' +
-                // ' vec3 n = normalize(vec3(view_model_matrix * vec4(rm_Normal, 0.0)));\n' +
                 ' vec3 n = mat3(transpose(inverse(view_model_matrix))) * rm_Normal;\n' +
-                // ' vec3 t = normalize(vec3(view_model_matrix * vec4(rm_Tangent, 0.0)));\n' +
                 // ' vec3 t = mat3(transpose(inverse(view_model_matrix))) * rm_Tangent;\n' +
                 // '  finNormal = cross(n,t);\n' +
+                '  lightViewPos = (view_matrix * vec4(lightPos,1.0)).xyz;\n' +
                 '  finNormal = n;\n' +
                 '  vPos =  (view_model_matrix * vertex).xyz;\n' +
                 '  vAO = mix(colorStart, colorEnd, rm_Extrudable);\r\n' +
@@ -56,8 +57,10 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec4 vAO;\n' +
                 'uniform sampler2D diffuseMap;\n' +
                 'uniform sampler2D alphaMap;\n' +
-                'out vec4 outColor;\n' +
-
+                'uniform vec3 lightColor;\n' +
+                'in vec3 lightViewPos;\n' +
+                'out vec4 fragColor;\n' +
+                'vec4 computePointLight();\n' +
                 '\n' +
                 'void main() {\n' +
                 '  float p = dot(normalize(-vPos),normalize(finNormal));\n' +
@@ -66,11 +69,30 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  alpha = alpha*texture(alphaMap, vTextureCoord).r;\n' +
                 '  vec4 color = texture(diffuseMap, vTextureCoord);\r\n' +
                 '  color*=vAO;\r\n' +
+                '  color*=computePointLight();\r\n' +
                 '  color.a = alpha;\r\n' +
-                // '  outColor =vec4(1, 0, 0, alpha);\n' +
-                '  outColor =color;\n' +
-                // '  outColor =vec4(1, 0, 0, 1);\n' +
-
+                '  fragColor =vec4(1, 0, 0, alpha);\n' +
+                '  fragColor =color;\n' +
+                // '  fragColor =vec4(1, 0, 0, 1);\n' +
+                '}\n' +
+                'vec4 computePointLight() {\n' +
+                '  float ka = 0.1;\n' +
+                '  float kd = 1.0;\n' +
+                '  float ks = 0.2;\n' +
+                '  vec3 lightDir = normalize(lightViewPos-vPos);\n' +
+                '  vec3 n = normalize(finNormal);\n' +
+                //Ambient
+                '  vec3 ambient = ka*lightColor;\n' +
+                //Diffuse
+                '  kd *= max(dot(n, lightDir), 0.0);\n' +
+                '  vec3 diffuse =kd*lightColor;\n' +
+                //Specular
+                '  vec3 viewDir = normalize(-vPos);\n' +
+                '  vec3 reflectDir = reflect(-lightDir,n);\n' +
+                '  ks *= pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n' +
+                '  vec3 specular = ks*lightColor;\n' +
+                //Result
+                '  return vec4((ambient+diffuse+specular),1.0);\n' +
                 '}';
         }
 
@@ -92,6 +114,9 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.alphaMap = this.getUniform('alphaMap');
             this.colorStart = this.getUniform('colorStart');
             this.colorEnd = this.getUniform('colorEnd');
+
+            this.lightPos = this.getUniform('lightPos');
+            this.lightColor = this.getUniform('lightColor');
         }
     }
 
