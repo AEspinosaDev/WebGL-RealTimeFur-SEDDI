@@ -333,11 +333,6 @@ define([
 
 
             drawCubeDiffuse(texture, preset) {
-                // this.shaderDiffuse.use();
-                // this.setTexture2D(0, texture, this.shaderDiffuse.sTexture);
-                // gl.uniform4f(this.shaderDiffuse.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
-                // this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset,this.shaderDiffuse, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
-                
                 
                 this.diffuseColoredShader.use();
                 this.setTexture2D(0, texture, this.diffuseColoredShader.diffuseMap);

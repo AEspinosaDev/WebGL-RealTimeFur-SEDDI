@@ -13,29 +13,36 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform mat4 view_proj_matrix;\n' +
                 'uniform mat4 view_matrix;\n' +
                 'uniform mat4 view_model_matrix;\n' +
+
                 'in vec4 rm_Vertex;\n' +
                 'in vec2 rm_TexCoord0;\n' +
                 'in vec3 rm_Normal;\n' +
                 'in vec3 rm_Tangent;\n' +
                 'in float rm_Extrudable;\n' +
+
                 'uniform int numOfVertices;\n' +
                 'uniform float layerThickness;\n' +
                 'uniform float layersCount;\n' +
                 'uniform vec4 colorStart;\r\n' +
                 'uniform vec4 colorEnd;\r\n' +
                 'uniform vec3 lightPos;\n' +
+
                 'out vec2 vTextureCoord;\n' +
                 'out vec3 finNormal;\n' +
                 'out vec3 vPos;\n' +
                 'out vec3 lightViewPos;\n' +
                 'out vec4 vAO;\r\n' +
+                'out float k_alpha;\r\n' +
+
                 '\n' +
                 'void main() {\n' +
                 '  float f = layersCount * layerThickness;\r\n' +
                 '  vec4 vertex;\n' +
                 '  if(rm_Extrudable==1.0){\n' + //
+                '  k_alpha = 0.0;\n' +
                 '  vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f, f, f, 0.0);\n' +
                 '  }else{\n' +
+                '  k_alpha=1.25;\n' +
                 '  vertex = rm_Vertex;}\n' +
                 '  gl_Position = view_proj_matrix * vertex;\n' +
                 '  vTextureCoord = rm_TexCoord0;\n' +
@@ -56,6 +63,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec3 viewPos;\n' +
                 'in vec4 vAO;\n' +
                 'in vec3 lightViewPos;\n' +
+                'in float k_alpha;\r\n' +
+
 
                 'uniform sampler2D diffuseMap;\n' +
                 'uniform sampler2D alphaMap;\n' +
@@ -75,7 +84,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec4 color = texture(diffuseMap, vTextureCoord);\r\n' +
                 '  color*=vAO;\r\n' +
                 '  color*=computePointLight();\r\n' +
-                '  color.a = alpha;\r\n' +
+                '  color.a = alpha*k_alpha;\r\n' +
                 '  fragColor =vec4(1, 0, 0, alpha);\n' +
                 '  fragColor =color;\n' +
                 // '  fragColor =vec4(1, 0, 0, 1);\n' +

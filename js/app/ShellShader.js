@@ -70,9 +70,9 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '   fragColor.a *= alphaColor;\r\n' +
                 '}\n' +
                 'vec4 computePointLight() {\n' +
-                '  float ka = 0.1;\n' +
-                '  float kd = 1.0;\n' +
-                '  float ks = 0.2;\n' +
+                '  float ka = 0.1;\n' + //This is ambient lightning just to make shadows less dark
+                '  float kd = 1.0;\n' + //This can be taken out
+                '  float ks = 0.2;\n' + //This should be only the especular texture
                 '  vec3 lightDir = normalize(lightViewPos-vPos);\n' +
                 '  vec3 n = normalize(finNormal);\n' +
                 //Ambient
