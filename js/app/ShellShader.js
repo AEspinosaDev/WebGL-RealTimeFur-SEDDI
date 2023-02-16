@@ -51,6 +51,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform sampler2D diffuseMap;\r\n' +
                 'uniform sampler2D alphaMap;\r\n' +
                 'uniform vec3 lightColor;\n' +
+                'uniform float intensity;\n' +
                 'in vec2 vTexCoord0;\r\n' +
                 'in vec4 vAO;\r\n' +
                 'in vec3 finNormal;\n' +
@@ -85,7 +86,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  ks *= pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n' +
                 '  vec3 specular = ks*lightColor;\n' +
                 //Result
-                '  return vec4((ambient+diffuse+specular),1.0);\n' +
+                '  return vec4((ambient+diffuse+specular),1.0)*intensity;\n' +
                 '}';
         }
 
@@ -107,6 +108,8 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.stiffness = this.getUniform('stiffness');
             this.lightPos = this.getUniform('lightPos');
             this.lightColor = this.getUniform('lightColor');
+            this.lightIntensity = this.getUniform('intensity');
+
         }
     }
 

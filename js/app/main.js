@@ -83,11 +83,27 @@ define([
             $('#sliderSize').on('change', function(e) {
                 renderer.size = e.value.newValue;
             });
+            $('#sliderPitchRot').on('change', function(e) {
+                renderer.anglePitch = e.value.newValue;
+            });
+            $('#sliderLightPosX').on('change', function(e) {
+                renderer.lightPos[1] = e.value.newValue;
+            });
+            $('#sliderLightPosY').on('change', function(e) {
+                renderer.lightPos[2] = e.value.newValue;
+            });
+            $('#sliderLightIntensity').on('change', function(e) {
+                renderer.lightIntensity = e.value.newValue;
+            });
 
             renderer.onPresetLoaded = function() {
                 $('#sliderLayers').slider('setValue', renderer.layers);
                 $('#sliderThickness').slider('setValue', renderer.thickness);
                 $('#sliderSize').slider('setValue', renderer.size);
+                $('#sliderPitchRot').slider('setValue', renderer.anglePitch);
+                $('#sliderLightPosX').slider('setValue', renderer.lightPos[1]);
+                $('#sliderLightPosY').slider('setValue', renderer.lightPos[2]);
+                $('#sliderLightIntensity').slider('setValue', renderer.lightIntensity);
 
                 clearTimeout(timeoutHideName);
                 $('#presetName')

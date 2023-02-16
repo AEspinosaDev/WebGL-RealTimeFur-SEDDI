@@ -4,14 +4,24 @@ define(function() {
 
     function FurPresets() {}
 
-    FurPresets.presets = [{
+    FurPresets.presets = [ {
+        'name': 'Timber Wolf',
+        'layers': 20,
+        'thickness': 0.15,
+        'waveScale': 0.3,
+        'diffuseTexture': 'fur-wolf.png',
+        'alphaTexture': 'uneven-alpha.png',
+        'finAlphaTexture': 'hairs-alpha.png',
+        'startColor': [0.0, 0.0, 0.0, 1.0],
+        'endColor': [1.0, 1.0, 1.0, 0.0]
+    }, {
+        
         'name': 'Leopard',
         'layers': 20,
         'thickness': 0.15,
         'waveScale': 0.5,
         'diffuseTexture': 'fur-leo.png',
         'alphaTexture': 'uneven-alpha.png',
-        'finAlphaTexture': 'hairs-alpha.png',
         'startColor': [0.6, 0.6, 0.6, 1.0],
         'endColor': [1.0, 1.0, 1.0, 0.0]
     }, {
@@ -32,16 +42,7 @@ define(function() {
         'alphaTexture': 'even-alpha.png',
         'startColor': [1.15, 1.15, 1.15, 1.0],
         'endColor': [0.95, 0.95, 0.95, 0.2]
-    }, {
-        'name': 'Timber Wolf',
-        'layers': 20,
-        'thickness': 0.15,
-        'waveScale': 0.3,
-        'diffuseTexture': 'fur-wolf.png',
-        'alphaTexture': 'uneven-alpha.png',
-        'startColor': [0.0, 0.0, 0.0, 1.0],
-        'endColor': [1.0, 1.0, 1.0, 0.0]
-    }, {
+    },{
         'name': 'Moss',
         'layers': 7,
         'thickness': 0.13,

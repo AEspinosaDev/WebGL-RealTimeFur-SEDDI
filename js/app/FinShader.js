@@ -55,12 +55,17 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec3 vPos;\n' +
                 'in vec3 viewPos;\n' +
                 'in vec4 vAO;\n' +
+                'in vec3 lightViewPos;\n' +
+
                 'uniform sampler2D diffuseMap;\n' +
                 'uniform sampler2D alphaMap;\n' +
                 'uniform vec3 lightColor;\n' +
-                'in vec3 lightViewPos;\n' +
+                'uniform float intensity;\n' +
+
                 'out vec4 fragColor;\n' +
+
                 'vec4 computePointLight();\n' +
+
                 '\n' +
                 'void main() {\n' +
                 '  float p = dot(normalize(-vPos),normalize(finNormal));\n' +
@@ -92,7 +97,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  ks *= pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n' +
                 '  vec3 specular = ks*lightColor;\n' +
                 //Result
-                '  return vec4((ambient+diffuse+specular),1.0);\n' +
+                '  return vec4((ambient+diffuse+specular),1.0)*intensity;\n' +
                 '}';
         }
 
@@ -117,6 +122,8 @@ define(['framework/BaseShader'], function (BaseShader) {
 
             this.lightPos = this.getUniform('lightPos');
             this.lightColor = this.getUniform('lightColor');
+            this.lightIntensity = this.getUniform('intensity');
+
         }
     }
 

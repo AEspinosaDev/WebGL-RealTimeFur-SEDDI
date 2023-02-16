@@ -38,6 +38,7 @@ define([
                 this.loaded = false; // won't draw until this is true
 
                 this.angleYaw = 0; // camera rotation angle
+                this.anglePitch = 0; // camera rotation angle
                 this.lastTime = 0; // used for animating camera
                 this.furTimer = 0;
                 this.windTimer = 0;
@@ -49,8 +50,10 @@ define([
                 this.matOrtho = MatrixUtils.mat4.create();
                 MatrixUtils.mat4.ortho(this.matOrtho, -1, 1, -1, 1, 2.0, 250);
 
+                //Light
                 this.lightPos = [1000.0, 1000.0, 1000.0]; //point light //z,x,y for some reason
                 this.lightColor = [1.0, 0.98, 0.92];
+                this.lightIntensity = 1.0;
 
                 this.ITEMS_TO_LOAD = 5; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
@@ -97,9 +100,9 @@ define([
             }
 
             initShaders() {
-                // this.diffuseColoredShader = new DiffuseColoredShader();
-                this.shaderDiffuse = new DiffuseShader();
+                //this.shaderDiffuse = new DiffuseShader();
                 this.VignetteShader = new VignetteShader();
+                this.diffuseColoredShader = new DiffuseColoredShader();
                 this.shaderShell = new ShellShader();
                 this.shaderFin = new FinShader();
             }
@@ -140,7 +143,8 @@ define([
                 //this.modelCube.loadJson('data/models/plane.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/bunny.json', boundUpdateCallback);
                 //  this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
-                this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
+                //this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
+                this.modelCube.loadJson('data/models/bear.json', boundUpdateCallback);
 
                 // this.textureChecker = UncompressedTextureLoader.load('data/textures/checker.png', boundUpdateCallback);
                 this.textureBackground = UncompressedTextureLoader.load('data/textures/bg-gradient.png', boundUpdateCallback);
@@ -295,7 +299,7 @@ define([
                 this.positionCamera(0.0);
                 this.setCameraFOV(0.6);
 
-                //this.drawCubeDiffuse(this.textureFurDiffuse, this.currentPreset);
+                this.drawCubeDiffuse(this.textureFurDiffuse, this.currentPreset);
 
                 gl.depthMask(false);
                 gl.disable(gl.CULL_FACE);
@@ -329,24 +333,24 @@ define([
 
 
             drawCubeDiffuse(texture, preset) {
-                this.shaderDiffuse.use();
-                this.setTexture2D(0, texture, this.shaderDiffuse.sTexture);
-                gl.uniform4f(this.shaderDiffuse.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
-                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuse, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 17, 17, 17);
+                // this.shaderDiffuse.use();
+                // this.setTexture2D(0, texture, this.shaderDiffuse.sTexture);
+                // gl.uniform4f(this.shaderDiffuse.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
+                // this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset,this.shaderDiffuse, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
+                
+                
+                this.diffuseColoredShader.use();
+                this.setTexture2D(0, texture, this.diffuseColoredShader.diffuseMap);
+                gl.uniform4f(this.diffuseColoredShader.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
+                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset,this.diffuseColoredShader, this.modelCube, 0, 0, 0, 0,  this.anglePitch, this.angleYaw, 1, 1, 1);
+                
             }
-
-            // drawLoadingCube() {
-            //     this.shaderDiffuseColored.use();
-            //     this.setTexture2D(0, this.textureChecker, this.shaderDiffuseColored.sTexture);
-            //     gl.uniform4f(this.shaderDiffuseColored.color, 0.8, 0.8, 0.8, 1);
-            //     this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.shaderDiffuseColored, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
-            // }
 
             drawFur(textureDiffuse, textureAlpha, preset) {
                 this.shaderFin.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderFin.diffuseMap);
                 this.setTexture2D(1, this.textureFinAlpha, this.shaderFin.alphaMap);
-                this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
+                this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0,  this.anglePitch, this.angleYaw, 1, 1, 1);
 
                 gl.depthMask(true);
                 // gl.enable(gl.BLEND);
@@ -356,15 +360,15 @@ define([
                 this.shaderShell.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
                 this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
-                this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, 0, this.angleYaw, 1, 1, 1);
+                this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0,  this.anglePitch, this.angleYaw, 1, 1, 1);
 
             }
 
-            drawDiffuseNormalStrideVBOTranslatedRotatedScaled(shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
-
+            drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset,shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
+                
 
                 model.bindBuffersExtended(shader);
-
+                
                 this.calculateMVPMatrix(tx, ty, tz, rx, ry, rz, sx, sy, sz);
 
                 // var lightViewPos = MatrixUtils.vec4.fromValues(this.lightPos[0],this.lightPos[1],this.lightPos[2],1);
@@ -379,14 +383,12 @@ define([
 
                 gl.uniform3f(shader.lightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
                 gl.uniform3f(shader.lightColor, this.lightColor[0],this.lightColor[1],this.lightColor[2]);
+                gl.uniform1f(shader.lightIntensity, this.lightIntensity);
 
                 gl.drawElements(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0);
             }
 
             drawShellsVBOTranslatedRotatedScaledInstanced(preset, shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
-                var a = Math.sin(this.windTimer * 6.2831852) / 2 + 0.5,
-                    scale = preset.waveScale * 0.4 + (a * preset.waveScale * 0.6);
-
 
                 model.bindBuffersExtended(shader);
 
@@ -401,10 +403,11 @@ define([
                 gl.uniform4f(shader.colorStart, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
                 gl.uniform4f(shader.colorEnd, preset.endColor[0], preset.endColor[1], preset.endColor[2], preset.endColor[3]);
                 gl.uniform1f(shader.time, this.furTimer);
-                gl.uniform1f(shader.waveScale, scale);
+                // gl.uniform1f(shader.waveScale, scale);
                 gl.uniform1f(shader.stiffness, this.FUR_STIFFNESS);
                 gl.uniform3f(shader.lightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
                 gl.uniform3f(shader.lightColor, this.lightColor[0], this.lightColor[1], this.lightColor[2]);
+                gl.uniform1f(shader.lightIntensity, this.lightIntensity);
 
                 gl.drawElementsInstanced(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0, preset.layers);
 
@@ -414,8 +417,6 @@ define([
                 model.bindFinsBuffersExtended(shader);
 
                 this.calculateMVPMatrix(tx, ty, tz, rx, ry, rz, sx, sy, sz);
-
-                
 
                 gl.uniformMatrix4fv(shader.view_proj_matrix, false, this.mMVPMatrix);
                 gl.uniformMatrix4fv(shader.view_matrix, false, this.mVMatrix);
@@ -428,7 +429,7 @@ define([
                 gl.uniform3f(shader.eyePos, this.mVMatrix[12], this.mVMatrix[13], this.mVMatrix[14]);
                 gl.uniform3f(shader.lightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
                 gl.uniform3f(shader.lightColor, this.lightColor[0], this.lightColor[1], this.lightColor[2]);
-
+                gl.uniform1f(shader.lightIntensity, this.lightIntensity);
 
                 gl.drawElements(gl.TRIANGLES, model.numFinIndices, gl.UNSIGNED_SHORT, 0);
 
