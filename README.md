@@ -6,4 +6,5 @@ Work in prgress. Currently implementing fur rendering method described in this p
 
 SEDDI render research team.
 
-![Screenshot (635)](https://user-images.githubusercontent.com/79087129/219031703-46df748b-4574-4755-ac95-e8d85c833072.png)
+![Screenshot (636)](https://user-images.githubusercontent.com/79087129/219366897-98243792-04ba-4677-8c3c-24fed14e5566.png)
+
