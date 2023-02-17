@@ -95,6 +95,17 @@ define([
             $('#sliderLightIntensity').on('change', function(e) {
                 renderer.lightIntensity = e.value.newValue;
             });
+            $('#sliderAmbientStrength').on('change', function(e) {
+                renderer.ambientStrength = e.value.newValue;
+            });
+            $('#sliderDiffusePower').on('change', function(e) {
+                renderer.diffusePower = e.value.newValue;
+            });
+            $('#sliderSpecularPower').on('change', function(e) {
+                renderer.specularPower = e.value.newValue;
+            });
+            
+
 
             renderer.onPresetLoaded = function() {
                 $('#sliderLayers').slider('setValue', renderer.layers);
@@ -104,6 +115,9 @@ define([
                 $('#sliderLightPosX').slider('setValue', renderer.lightPos[1]);
                 $('#sliderLightPosY').slider('setValue', renderer.lightPos[2]);
                 $('#sliderLightIntensity').slider('setValue', renderer.lightIntensity);
+                $('#sliderAmbientStrength').slider('setValue', renderer.ambientStrength);
+                $('#sliderDiffusePower').slider('setValue', renderer.diffusePower);
+                $('#sliderSpecularPower').slider('setValue', renderer.specularPower);
 
                 clearTimeout(timeoutHideName);
                 $('#presetName')

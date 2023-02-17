@@ -73,9 +73,9 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 'out vec4 fragColor;\n' +
 
-                '  float Pa = 0.2;\n' +
-                '  float Pd = 32.0;\n' +
-                '  float Ps = 64.0;\n' +
+                ' uniform float Sa;\n' +
+                '  uniform float Pd;\n' +
+                '  uniform float Ps;\n' +
                 '  vec3 Ka;\n' +
                 '  vec3 Kd;\n' +
                 '  float Ks;\n' +
@@ -107,7 +107,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec3 n = normalize(finNormal);\n' +
 
                 //Ambient
-                '  vec3 ambient = Pa*Ka*lightColor;\n' +
+                '  vec3 ambient = Sa*Ka*lightColor;\n' +
                 //Diffuse
                 '  float lambertian = Ps*max(dot(n, lightDir), 0.0);\n' +
                 '  vec3 diffuse =Kd*lambertian*lightColor;\n' +
@@ -117,9 +117,9 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec3 specular = spec*lightColor;\n' +
                 //Result
                 '  return vec4((ambient+diffuse+specular),1.0)*intensity;\n' +
-                '}\n'+ 
-                
-                
+                '}\n' +
+
+
                 //Kayijas method
                 'vec4 computeHairLighting() {\n' +
                 '  vec3 L = normalize(lightViewPos-vPos);\n' + //LightDir
@@ -130,12 +130,12 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 '  float u =dot(T,L);\n' + //Lambertian
                 '  float v =dot(T,H);\n' + //Spec
-                
 
-                '  vec3 color = Ka+Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5);\n' + 
+
+                '  vec3 color = Sa*Ka+Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5);\n' +
 
                 '  return vec4(color,1.0)*intensity;\n' +
-                '}' 
+                '}'
         }
 
         fillUniformsAttributes() {
@@ -160,6 +160,10 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.lightPos = this.getUniform('lightPos');
             this.lightColor = this.getUniform('lightColor');
             this.lightIntensity = this.getUniform('intensity');
+
+            this.ambientStrength = this.getUniform('Sa');
+            this.diffusePower = this.getUniform('Pd');
+            this.specularPower = this.getUniform('Ps');
 
         }
     }
