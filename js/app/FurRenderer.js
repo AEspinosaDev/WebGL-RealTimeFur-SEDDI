@@ -53,6 +53,7 @@ define([
                 //Light
                 this.lightPos = [1000.0, 1000.0, 1000.0]; //point light //z,x,y for some reason
                 this.lightColor = [1.0, 0.98, 0.92];
+                // this.lightColor = [1.0, 1, 1];
                 this.lightIntensity = 1.0;
 
                 this.ITEMS_TO_LOAD = 5; // total number of OpenGL buffers+textures to load

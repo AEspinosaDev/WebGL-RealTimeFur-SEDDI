@@ -38,40 +38,55 @@ define(['framework/BaseShader'], function (BaseShader) {
 
             this.fragmentShaderCode = '#version 300 es\r\n' +
                 'precision highp float;\r\n' +
+
                 'uniform sampler2D diffuseMap;\r\n' +
                 'uniform vec3 lightColor;\n' +
                 'uniform vec4 color;\n' +
                 'uniform float intensity;\n' +
+
                 'in vec2 vTexCoord0;\r\n' +
                 'in vec3 finNormal;\n' +
                 'in vec3 vPos;\n' +
+
                 'in vec3 lightViewPos;\n' +
                 'out vec4 fragColor;\r\n' +
+
+                '  float Pa = 0.2;\n' +
+                '  float Pd = 1.0;\n' +
+                '  float Ps = 1.0;\n' +
+                '  vec3 Ka;\n' +
+                '  vec3 Kd;\n' +
+                '  float Ks;\n' +
+                '  float shininess = 4.0;\n' + //this should be a shininess texture
+
+
                 'vec4 computePointLight();\n' +
                 '\r\n' +
                 'void main()\r\n' +
                 '{\r\n' +
-                '   vec4 diffuseColor = texture(diffuseMap, vTexCoord0);\r\n' +
-                '   fragColor = diffuseColor * computePointLight();\r\n' +
+                '   Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
+                '   Kd = Ka;' +
+                '   Ks = 0.5;\r\n' +
+                '   fragColor = computePointLight();\r\n' +
                 '   fragColor*=color;\r\n' +
 
                 '}\n' +
                 'vec4 computePointLight() {\n' +
-                '  float ka = 0.1;\n' +
-                '  float kd = 1.0;\n' +
-                '  float ks = 0.2;\n' +
                 '  vec3 lightDir = normalize(lightViewPos-vPos);\n' +
-                '  vec3 n = normalize(finNormal);\n' +
-                //Ambient
-                '  vec3 ambient = ka*lightColor;\n' +
-                //Diffuse
-                '  kd *= max(dot(n, lightDir), 0.0);\n' +
-                '  vec3 diffuse =kd*lightColor;\n' +
-                //Specular
                 '  vec3 viewDir = normalize(-vPos);\n' +
+                '  vec3 halfwayDir = normalize(lightDir-viewDir);\n' +
+
+                '  vec3 n = normalize(finNormal);\n' +
+
+                //Ambient
+                '  vec3 ambient = Pa*Ka*lightColor;\n' +
+                //Diffuse
+                '  float lambertian = Ps*max(dot(n, lightDir), 0.0);\n' +
+                '  vec3 diffuse =Kd*lambertian*lightColor;\n' +
+                //Specular
                 '  vec3 reflectDir = reflect(-lightDir,n);\n' +
-                '  ks *= pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n' +
-                '  vec3 specular = ks*lightColor;\n' +
+                '  float spec = Ks*Ps * pow(max(dot(n, halfwayDir), 0.0), shininess);\n' +
+                '  vec3 specular = spec*lightColor;\n' +
                 //Result
                 '  return vec4((ambient+diffuse+specular),1.0)*intensity;\n' +
                 '}';
