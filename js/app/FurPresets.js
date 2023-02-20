@@ -6,14 +6,16 @@ define(function() {
 
     FurPresets.presets = [ {
         'name': 'Timber Wolf',
-        'layers': 20,
-        'thickness': 0.15,
+        'layers': 50,
+        'thickness': 0.08,
         'waveScale': 0.3,
         'diffuseTexture': 'fur-wolf.png',
         'alphaTexture': 'uneven-alpha.png',
         'finAlphaTexture': 'hairs-alpha.png',
         'startColor': [0.0, 0.0, 0.0, 1.0],
-        'endColor': [1.0, 1.0, 1.0, 0.0]
+        'endColor': [1.0, 1.0, 1.0, 0.0],
+        'diffusePower': 4,
+        'specularPower': 12
     }, {
         
         'name': 'Leopard',
@@ -23,7 +25,9 @@ define(function() {
         'diffuseTexture': 'fur-leo.png',
         'alphaTexture': 'uneven-alpha.png',
         'startColor': [0.6, 0.6, 0.6, 1.0],
-        'endColor': [1.0, 1.0, 1.0, 0.0]
+        'endColor': [1.0, 1.0, 1.0, 0.0],
+        'diffusePower': 8,
+        'specularPower': 18
     }, {
         'name': 'Cow',
         'layers': 10,
@@ -32,7 +36,9 @@ define(function() {
         'diffuseTexture': 'fur-cow.png',
         'alphaTexture': 'uneven-alpha.png',
         'startColor': [0.7, 0.7, 0.7, 1.0],
-        'endColor': [1.0, 1.0, 1.0, 0.0]
+        'endColor': [1.0, 1.0, 1.0, 0.0],
+        'diffusePower': 0.4,
+        'specularPower': 0.12
     }, {
         'name': 'Chick',
         'layers': 13,
@@ -41,7 +47,9 @@ define(function() {
         'diffuseTexture': 'fur-chick.png',
         'alphaTexture': 'even-alpha.png',
         'startColor': [1.15, 1.15, 1.15, 1.0],
-        'endColor': [0.95, 0.95, 0.95, 0.2]
+        'endColor': [0.95, 0.95, 0.95, 0.2],
+        'diffusePower': 0.4,
+        'specularPower': 0.12
     },{
         'name': 'Moss',
         'layers': 7,
@@ -50,7 +58,9 @@ define(function() {
         'diffuseTexture': 'moss.png',
         'alphaTexture': 'moss-alpha.png',
         'startColor': [0.2, 0.2, 0.2, 1.0],
-        'endColor': [1.0, 1.0, 1.0, 0.8]
+        'endColor': [1.0, 1.0, 1.0, 0.8],
+        'diffusePower': 0.4,
+        'specularPower': 0.12
     }];
 
     FurPresets._current = 0;

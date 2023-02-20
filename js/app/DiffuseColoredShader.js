@@ -40,6 +40,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'precision highp float;\r\n' +
 
                 'uniform sampler2D diffuseMap;\r\n' +
+                'uniform sampler2D depthMap;\r\n' +
                 'uniform vec3 lightColor;\n' +
                 'uniform vec4 color;\n' +
                 'uniform float intensity;\n' +
@@ -69,6 +70,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '   Ks = 0.5;\r\n' +
                 '   fragColor = computePointLight();\r\n' +
                 '   fragColor*=color;\r\n' +
+                // '   fragColor=texture(depthMap, vTexCoord0);\r\n' +
 
                 '}\n' +
                 'vec4 computePointLight() {\n' +
@@ -104,6 +106,8 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.lightColor = this.getUniform('lightColor');
             this.lightIntensity = this.getUniform('intensity');
             this.color = this.getUniform('color');
+
+            this.depthMap = this.getUniform('depthMap');
         }
     }
 

@@ -4,7 +4,7 @@ define([
     'framework/BaseRenderer',
     'jquery',
     'ShellShader',
-    'DiffuseShader',
+    'ShadowMapShader',
     'FinShader',
     'VignetteShader',
     'DiffuseColoredShader',
@@ -19,7 +19,7 @@ define([
         BaseRenderer,
         $,
         ShellShader,
-        DiffuseShader,
+        ShadowMapShader,
         FinShader,
         VignetteShader,
         DiffuseColoredShader,
@@ -53,13 +53,13 @@ define([
                 //Light
                 this.lightPos = [1000.0, 1000.0, 1000.0]; //point light //z,x,y for some reason
                 this.lightColor = [1.0, 0.98, 0.92];
-                // this.lightColor = [1.0, 1, 1];
                 this.lightIntensity = 1.0;
+                this.shadowsEnabled = true;
 
                 //Kajiyas fur powers
-                this.ambientStrength = 0.75;
-                this.diffusePower = 32.0;
-                this.specularPower = 64.0;
+                this.ambientStrength = 0.5;
+                this.diffusePower = 4.0;
+                this.specularPower = 12.0;
 
                 this.ITEMS_TO_LOAD = 5; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
@@ -87,6 +87,8 @@ define([
             onAfterInit() {
                 super.onAfterInit();
 
+
+
                 if (!this.isWebGL2) {
                     this.onInitError();
                 }
@@ -106,7 +108,7 @@ define([
             }
 
             initShaders() {
-                //this.shaderDiffuse = new DiffuseShader();
+                this.shadowMapShader = new ShadowMapShader();
                 this.VignetteShader = new VignetteShader();
                 this.diffuseColoredShader = new DiffuseColoredShader();
                 this.shaderShell = new ShellShader();
@@ -164,6 +166,10 @@ define([
 
                 this.vignette = new VignetteData();
                 this.vignette.initGL(gl);
+
+                //Shadow setup
+                this.createDepthFBO();
+
             }
 
 
@@ -245,9 +251,9 @@ define([
              * Calculates camera matrix
              * @param {unmber} a - position in [0...1] range
              */
-            positionCamera(a) {
+            positionCamera(pos, target, up) {
                 MatrixUtils.mat4.identity(this.mVMatrix);
-                MatrixUtils.mat4.lookAt(this.mVMatrix, [190, 0, 270], [0, 0, 0], [0, 0, 1]);
+                MatrixUtils.mat4.lookAt(this.mVMatrix, pos, target, up);
             }
 
             /**
@@ -263,9 +269,9 @@ define([
                 }
 
                 if (gl.canvas.width >= gl.canvas.height) {
-                    this.setFOV(this.mProjMatrix, this.FOV_LANDSCAPE * multiplier, ratio, 20.0, 1000.0);
+                    this.setFOV(this.mProjMatrix, this.FOV_LANDSCAPE * multiplier, ratio, 20.0, 5000.0);
                 } else {
-                    this.setFOV(this.mProjMatrix, this.FOV_PORTRAIT * multiplier, ratio, 20.0, 1000.0);
+                    this.setFOV(this.mProjMatrix, this.FOV_PORTRAIT * multiplier, ratio, 20.0, 5000.0);
                 }
             }
 
@@ -290,19 +296,39 @@ define([
                     }
                 }
 
-                gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-                gl.clearColor(0.3, 0.3, 0.3, 1.0);
-                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
                 gl.enable(gl.DEPTH_TEST);
                 gl.enable(gl.CULL_FACE);
                 gl.cullFace(gl.BACK);
 
+                //Shadow mapping pass
+                if(this.shadowsEnabled){
+                    
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
+                    gl.viewport(0, 0, this.depthTextureSize, this.depthTextureSize);
+                    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                    
+                    
+                    
+                    this.positionCamera(this.lightPos, [0, 0, 0], [0, 0, 1]);
+                    this.setCameraFOV(0.6);
+                    this.shadowMapShader.use();
+
+                    this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.currentPreset, this.shadowMapShader, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
+
+                }
+
+                //Standard pass
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+                gl.clearColor(0.3, 0.3, 0.3, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
                 gl.depthMask(false);
                 this.drawVignette(this.textureBackground);
                 gl.depthMask(true);
-
-                this.positionCamera(0.0);
+                
+                this.positionCamera([190, 0, 270], [0, 0, 0], [0, 0, 1]);
                 this.setCameraFOV(0.6);
 
                 this.drawCubeDiffuse(this.textureFurDiffuse, this.currentPreset);
@@ -342,6 +368,7 @@ define([
 
                 this.diffuseColoredShader.use();
                 this.setTexture2D(0, texture, this.diffuseColoredShader.diffuseMap);
+                this.setTexture2D(1, this.depthTexture, this.diffuseColoredShader.depthMap);
                 gl.uniform4f(this.diffuseColoredShader.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
                 this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, this.diffuseColoredShader, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
 
@@ -467,6 +494,39 @@ define([
                 }
 
                 this.lastTime = timeNow;
+            }
+
+            createDepthFBO() {
+
+               
+                this.depthTexture = gl.createTexture();
+                this.depthTextureSize = 1024;
+                gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
+                gl.texImage2D(
+                    gl.TEXTURE_2D,      // target
+                    0,                  // mip level
+                    gl.DEPTH_COMPONENT24, // internal format
+                    this.depthTextureSize,   // width
+                    this.depthTextureSize,   // height
+                    0,                  // border
+                    gl.DEPTH_COMPONENT, // format
+                    gl.UNSIGNED_INT,    // type
+                    null);              // data
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+                this.depthFramebuffer = gl.createFramebuffer();
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
+                gl.framebufferTexture2D(
+                    gl.FRAMEBUFFER,       // target
+                    gl.DEPTH_ATTACHMENT,  // attachment point
+                    gl.TEXTURE_2D,        // texture target
+                    this.depthTexture,         // texture
+                    0);                   // mip level
+
+
             }
         }
 
