@@ -61,11 +61,8 @@ define([
                 this.lightColor = [1.0, 0.98, 0.92];
                 this.lightIntensity = 1.0;
                 this.shadowsEnabled = true;
-
-                //Kajiyas fur powers
+                
                 this.ambientStrength = 0.5;
-                this.diffusePower = 4.0;
-                this.specularPower = 12.0;
 
                 this.ITEMS_TO_LOAD = 5; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
@@ -204,16 +201,31 @@ define([
                 this.currentPreset['layers'] = value;
             }
 
-            get thickness() {
-                return this.currentPreset['thickness'];
+            get hairLength() {
+                return this.currentPreset['hairLength'];
             }
 
-            set thickness(value) {
-                this.currentPreset['thickness'] = value;
+            set hairLength(value) {
+                this.currentPreset['hairLength'] = value;
             }
 
             get presetName() {
                 return this.currentPreset['name'];
+            }
+            set diffusePower(value) {
+                this.currentPreset['diffusePower'] = value;
+            }
+          
+            get diffusePower() {
+                return this.currentPreset['diffusePower'];
+            }
+            set specularPower(value) {
+                this.currentPreset['specularPower'] = value;
+            }
+          
+          
+            get specularPower() {
+                return this.currentPreset['specularPower'];
             }
 
             loadPreset(preset) {
@@ -442,7 +454,7 @@ define([
                 gl.uniformMatrix4fv(shader.view_matrix, false, this.mVMatrix);
                 gl.uniformMatrix4fv(shader.view_model_matrix, false, this.mMVMatrix);
 
-                gl.uniform1f(shader.layerThickness, preset.thickness);
+                gl.uniform1f(shader.shellOffset, preset.hairLength/preset.layers);
                 gl.uniform1f(shader.layersCount, preset.layers);
                 gl.uniform4f(shader.colorStart, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
                 gl.uniform4f(shader.colorEnd, preset.endColor[0], preset.endColor[1], preset.endColor[2], preset.endColor[3]);
@@ -454,8 +466,8 @@ define([
                 gl.uniform1f(shader.lightIntensity, this.lightIntensity);
 
                 gl.uniform1f(shader.ambientStrength, this.ambientStrength);
-                gl.uniform1f(shader.diffusePower, this.diffusePower);
-                gl.uniform1f(shader.specularPower, this.specularPower);
+                gl.uniform1f(shader.diffusePower, preset.diffusePower);
+                gl.uniform1f(shader.specularPower, preset.specularPower);
 
                 gl.drawElementsInstanced(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0, preset.layers);
 
@@ -472,7 +484,7 @@ define([
 
                 gl.uniform4f(shader.colorStart, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
                 gl.uniform4f(shader.colorEnd, preset.endColor[0], preset.endColor[1], preset.endColor[2], preset.endColor[3]);
-                gl.uniform1f(shader.layerThickness, preset.thickness);
+                gl.uniform1f(shader.hairLength, preset.hairLength);
                 gl.uniform1f(shader.layersCount, preset.layers);
                 gl.uniform3f(shader.eyePos, this.mVMatrix[12], this.mVMatrix[13], this.mVMatrix[14]);
                 gl.uniform3f(shader.lightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
@@ -480,8 +492,8 @@ define([
                 gl.uniform1f(shader.lightIntensity, this.lightIntensity);
 
                 gl.uniform1f(shader.ambientStrength, this.ambientStrength);
-                gl.uniform1f(shader.diffusePower, this.diffusePower);
-                gl.uniform1f(shader.specularPower, this.specularPower);
+                gl.uniform1f(shader.diffusePower, preset.diffusePower);
+                gl.uniform1f(shader.specularPower, preset.specularPower);
 
                 gl.uniform1i(shader.finOpacity, this.finOpacity);
 

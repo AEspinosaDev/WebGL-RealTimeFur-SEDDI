@@ -21,7 +21,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in float rm_Extrudable;\n' +
 
                 'uniform int numOfVertices;\n' +
-                'uniform float layerThickness;\n' +
+                'uniform float hairLength;\n' +
                 'uniform float layersCount;\n' +
                 'uniform vec4 colorStart;\r\n' +
                 'uniform vec4 colorEnd;\r\n' +
@@ -36,7 +36,7 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 '\n' +
                 'void main() {\n' +
-                '  float f = layersCount * layerThickness;\r\n' +
+                '  float f = hairLength;\r\n' +
                 '  vec4 vertex;\n' +
                 '  if(rm_Extrudable==1.0){\n' + //
                 '  k_alpha = 0.0;\n' +
@@ -156,7 +156,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.rm_Normal = this.getAttrib('rm_Normal');
             this.rm_Tangent = this.getAttrib('rm_Tangent');
             this.numOfVertices = this.getUniform('numOfVertices');
-            this.layerThickness = this.getUniform('layerThickness');
+            this.hairLength = this.getUniform('hairLength');
             this.layersCount = this.getUniform('layersCount');
             this.eyePos = this.getUniform('eyePos');
             this.diffuseMap = this.getUniform('diffuseMap');

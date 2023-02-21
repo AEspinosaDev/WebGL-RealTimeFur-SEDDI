@@ -7,20 +7,20 @@ define(function() {
     FurPresets.presets = [ {
         'name': 'Timber Wolf',
         'layers': 50,
-        'thickness': 0.08,
+        'hairLength': 2.5,
         'waveScale': 0.3,
         'diffuseTexture': 'fur-wolf.png',
         'alphaTexture': 'uneven-alpha.png',
         'finAlphaTexture': 'hairs-alpha.png',
-        'startColor': [0.0, 0.0, 0.0, 1.0],
+        'startColor': [0.1, 0.1, 0.1, 1.0],
         'endColor': [1.0, 1.0, 1.0, 0.0],
         'diffusePower': 4,
         'specularPower': 12
     }, {
         
         'name': 'Leopard',
-        'layers': 32,
-        'thickness': 0.06,
+        'layers': 36,
+        'hairLength': 2,
         'waveScale': 0.5,
         'diffuseTexture': 'fur-leo.png',
         'alphaTexture': 'uneven-alpha.png',
@@ -30,8 +30,8 @@ define(function() {
         'specularPower': 18
     }, {
         'name': 'Cow',
-        'layers': 10,
-        'thickness': 0.15,
+        'layers': 32,
+        'hairLength': 1,
         'waveScale': 0.2,
         'diffuseTexture': 'fur-cow.png',
         'alphaTexture': 'uneven-alpha.png',
@@ -41,8 +41,8 @@ define(function() {
         'specularPower': 0.12
     }, {
         'name': 'Chick',
-        'layers': 13,
-        'thickness': 0.13,
+        'layers': 10,
+        'hairLength': 2,
         'waveScale': 0.12,
         'diffuseTexture': 'fur-chick.png',
         'alphaTexture': 'even-alpha.png',
@@ -53,7 +53,7 @@ define(function() {
     },{
         'name': 'Moss',
         'layers': 7,
-        'thickness': 0.13,
+        'hairLength': 2,
         'waveScale': 0.0,
         'diffuseTexture': 'moss.png',
         'alphaTexture': 'moss-alpha.png',

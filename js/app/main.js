@@ -77,8 +77,8 @@ define([
             $('#sliderLayers').on('change', function (e) {
                 renderer.layers = e.value.newValue;
             });
-            $('#sliderThickness').on('change', function (e) {
-                renderer.thickness = e.value.newValue;
+            $('#sliderhairLength').on('change', function (e) {
+                renderer.hairLength = e.value.newValue;
             });
             $('#sliderSize').on('change', function (e) {
                 renderer.size = e.value.newValue;
@@ -140,7 +140,7 @@ define([
 
             renderer.onPresetLoaded = function () {
                 $('#sliderLayers').slider('setValue', renderer.layers);
-                $('#sliderThickness').slider('setValue', renderer.thickness);
+                $('#sliderhairLength').slider('setValue', renderer.hairLength);
                 $('#sliderSize').slider('setValue', renderer.size);
                 $('#sliderPitchRot').slider('setValue', renderer.anglePitch);
                 $('#sliderLightPosX').slider('setValue', renderer.lightPos[1]);

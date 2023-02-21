@@ -9,7 +9,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform mat4 view_proj_matrix;\r\n' +
                 'uniform mat4 view_model_matrix;\r\n' +
                 'uniform mat4 view_matrix;\r\n' +
-                'uniform float layerThickness;\r\n' +
+                'uniform float shellOffset;\r\n' +
                 'uniform float layersCount;\r\n' +
                 'uniform vec4 colorStart;\r\n' +
                 'uniform vec4 colorEnd;\r\n' +
@@ -33,7 +33,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '\r\n' +
                 'void main( void )\r\n' +
                 '{\r\n' +
-                '    float f = float(gl_InstanceID+1) * layerThickness;\r\n' +
+                '    float f = float(gl_InstanceID+1) * shellOffset;\r\n' +
                 '    float layerCoeff = float(gl_InstanceID) / layersCount;\r\n' +
                 '    vec4 vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f, f, f, 0.0);\r\n' +
                 '\r\n' +
@@ -132,7 +132,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.rm_Normal = this.getAttrib('rm_Normal');
             this.diffuseMap = this.getUniform('diffuseMap');
             this.alphaMap = this.getUniform('alphaMap');
-            this.layerThickness = this.getUniform('layerThickness');
+            this.shellOffset = this.getUniform('shellOffset');
             this.layersCount = this.getUniform('layersCount');
             this.colorStart = this.getUniform('colorStart');
             this.colorEnd = this.getUniform('colorEnd');
