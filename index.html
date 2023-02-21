@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="HairFur 3D WebGL Demo">
     <meta name="author" content="Oleksandr Popov and Antonio Espinosa">
-    <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-icon-57x57.png">
+    <!-- <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-icon-72x72.png">
     <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-icon-76x76.png">
@@ -19,7 +19,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/android-icon-192x192.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="/icons/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png"> -->
     <link rel="manifest" href="/manifest.json">
     <meta name="msapplication-TileColor" content="#cccccc">
     <meta name="msapplication-TileImage" content="/icons/ms-icon-144x144.png">
@@ -74,6 +74,28 @@
                             <label class="control-label text-right">
                                 <h3>Fur Properties</h3>
                         </div>
+                        <div class="form-group">
+
+                            <div class="row">
+                                <label class="col-sm-3 control-label text-left">
+                                    Render Fur
+                                    <input class="form-check-input" type="checkbox" value="" id="renderFur" checked>
+                                </label>
+                                <label class="col-sm-3 control-label text-left">
+                                    Render Fins
+                                    <input class="form-check-input" type="checkbox" value="" id="renderFins" checked>
+                                </label>
+                                <label class="col-sm-3 control-label text-left">
+                                    Fin opacity
+                                    <input class="form-check-input" type="checkbox" value="" id="finOpacity" unchecked>
+                                </label>
+                                <label class="col-sm-3 control-label text-left">
+                                    Render Shells
+                                    <input class="form-check-input" type="checkbox" value="" id="renderShells" checked>
+                                </label>
+                            </div>
+                        </div>
+                        </br>
                         <div class="form-group">
                             <label class="col-sm-3 control-label text-left">
                                 Number of Layers
@@ -157,8 +179,7 @@
                             <label class="col-sm-3 control-label text-left">
                                 Light Color
                             </label>
-                            <input type="color" id="lightColor" name="lightColor" 
-                                   value="#fffefa" size="500">
+                            <input type="color" id="lightColor" name="lightColor" value="#fffefa" size="500">
                         </div>
 
                         <div class="form-group">
@@ -195,6 +216,7 @@
                                     data-slider-value="64">
                             </div>
                         </div>
+
                     </form>
                     <div class="well well-sm">
                         Credits to Antonio Espinosa. Basic renderer framework made by Oleksandr Popov.

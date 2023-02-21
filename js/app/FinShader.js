@@ -71,6 +71,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform vec3 lightColor;\n' +
                 'uniform float intensity;\n' +
 
+                'uniform int finOpacity;\n' +
+
                 'out vec4 fragColor;\n' +
 
                 ' uniform float Sa;\n' +
@@ -85,17 +87,22 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'vec4 computeHairLighting();\n' +
                 '\n' +
                 'void main() {\n' +
+                '  float alpha;\n' +
+                '  if(finOpacity==1){\n' +
+                '  alpha = 1.0;\n' +
+                '  }else{\n' +
                 '  float p = dot(normalize(-vPos),normalize(finNormal));\n' +
                 '  p = 1.0-p;\n' +
-                '  float alpha = max(0.0,2.0*abs(p)-1.0);\n' +
-                '  alpha = alpha*texture(alphaMap, vTextureCoord).r;\n' +
+                '  alpha = max(0.0,2.0*abs(p)-1.0);\n' +
+                '  }\n' +
+                '   float outAlpha = alpha*texture(alphaMap, vTextureCoord).r;\n' +
                 '   Ka = texture(diffuseMap, vTextureCoord).rgb;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
 
                 '  fragColor=computeHairLighting();\r\n' +
                 '  fragColor*=vAO;\r\n' +
-                '  fragColor.a = alpha*k_alpha;\r\n' +
+                '  fragColor.a = outAlpha*k_alpha;\r\n' +
                 // '  fragColor =vec4(1, 0, 0, alpha);\n' +
                 // '  fragColor =vec4(1, 0, 0, 1);\n' +
                 '}\n' +
@@ -164,6 +171,8 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.ambientStrength = this.getUniform('Sa');
             this.diffusePower = this.getUniform('Pd');
             this.specularPower = this.getUniform('Ps');
+
+            this.finOpacity = this.getUniform('finOpacity');
 
         }
     }

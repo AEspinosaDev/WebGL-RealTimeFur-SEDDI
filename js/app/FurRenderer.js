@@ -50,8 +50,14 @@ define([
                 this.matOrtho = MatrixUtils.mat4.create();
                 MatrixUtils.mat4.ortho(this.matOrtho, -1, 1, -1, 1, 2.0, 250);
 
+                //Conditionals
+                this.renderFins = true;
+                this.renderShells = true;
+                this.renderFur = true;
+                this.finOpacity = false;
+
                 //Light
-                this.lightPos = [1000.0, 1000.0, 1000.0]; //point light //z,x,y for some reason
+                this.lightPos = [1000.0, 1000.0, 1000.0]; //point light //z,x,y because up is the last coord
                 this.lightColor = [1.0, 0.98, 0.92];
                 this.lightIntensity = 1.0;
                 this.shadowsEnabled = true;
@@ -302,14 +308,14 @@ define([
                 gl.cullFace(gl.BACK);
 
                 //Shadow mapping pass
-                if(this.shadowsEnabled){
-                    
+                if (this.shadowsEnabled) {
+
                     gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
                     gl.viewport(0, 0, this.depthTextureSize, this.depthTextureSize);
                     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-                    
-                    
-                    
+
+
+
                     this.positionCamera(this.lightPos, [0, 0, 0], [0, 0, 1]);
                     this.setCameraFOV(0.6);
                     this.shadowMapShader.use();
@@ -327,7 +333,7 @@ define([
                 gl.depthMask(false);
                 this.drawVignette(this.textureBackground);
                 gl.depthMask(true);
-                
+
                 this.positionCamera([190, 0, 270], [0, 0, 0], [0, 0, 1]);
                 this.setCameraFOV(0.6);
 
@@ -341,7 +347,9 @@ define([
                 // gl.blendFunc(gl.SRC_ALPHA, gl.ONE); // too bright
                 // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
 
-                this.drawFur(this.textureFurDiffuse, this.textureFurAlpha, this.currentPreset);
+                if (this.renderFur) {
+                    this.drawFur(this.textureFurDiffuse, this.textureFurAlpha, this.currentPreset);
+                }
 
                 gl.disable(gl.BLEND);
             }
@@ -378,7 +386,10 @@ define([
                 this.shaderFin.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderFin.diffuseMap);
                 this.setTexture2D(1, this.textureFinAlpha, this.shaderFin.alphaMap);
-                this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
+
+                if (this.renderFins) {
+                    this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
+                }
 
                 gl.depthMask(true);
                 // gl.enable(gl.BLEND);
@@ -388,7 +399,10 @@ define([
                 this.shaderShell.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
                 this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
-                this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
+
+                if (this.renderShells) {
+                    this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
+                }
 
             }
 
@@ -469,6 +483,8 @@ define([
                 gl.uniform1f(shader.diffusePower, this.diffusePower);
                 gl.uniform1f(shader.specularPower, this.specularPower);
 
+                gl.uniform1i(shader.finOpacity, this.finOpacity);
+
                 gl.drawElements(gl.TRIANGLES, model.numFinIndices, gl.UNSIGNED_SHORT, 0);
 
             }
@@ -498,7 +514,7 @@ define([
 
             createDepthFBO() {
 
-               
+
                 this.depthTexture = gl.createTexture();
                 this.depthTextureSize = 1024;
                 gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);

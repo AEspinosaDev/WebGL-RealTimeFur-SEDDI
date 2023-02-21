@@ -107,7 +107,18 @@ define([
             // $('#lightColor').on('change', function(e) {
             //     renderer.lightColor = e.value.newValue;
             // });
-           
+            $('#renderFins').on('change', function () {
+                if(renderer.renderFins){renderer.renderFins=false}else{renderer.renderFins=true};
+            });
+            $('#renderShells').on('change', function () {
+                if(renderer.renderShells){renderer.renderShells=false}else{renderer.renderShells=true};
+            });
+            $('#renderFur').on('change', function () {
+                if(renderer.renderFur){renderer.renderFur=false}else{renderer.renderFur=true};
+            });
+            $('#finOpacity').on('change', function () {
+                if(renderer.finOpacity){renderer.finOpacity=false}else{renderer.finOpacity=true};
+            });
            
 
 
