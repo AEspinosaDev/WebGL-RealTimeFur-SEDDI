@@ -104,9 +104,7 @@ define([
             $('#sliderSpecularPower').on('change', function (e) {
                 renderer.specularPower = e.value.newValue;
             });
-            // $('#lightColor').on('change', function(e) {
-            //     renderer.lightColor = e.value.newValue;
-            // });
+           
             $('#renderFins').on('change', function () {
                 if(renderer.renderFins){renderer.renderFins=false}else{renderer.renderFins=true};
             });
@@ -119,6 +117,23 @@ define([
             $('#finOpacity').on('change', function () {
                 if(renderer.finOpacity){renderer.finOpacity=false}else{renderer.finOpacity=true};
             });
+            
+            // $('#lightColor').ColorPicker({
+            //     color: '#00ffff',
+            //     onShow: function(colpkr) {
+            //         $(colpkr).fadeIn(500);
+            //         return false;
+            //     },
+            //     onHide: function(colpkr) {
+            //         $(colpkr).fadeOut(500);
+            //         return false;
+            //     },
+            //     onChange: function(hsb, hex, rgb) {
+            //         $('#colorSelector div').css('backgroundColor', '#' + hex);
+            //         alert(hex);
+            //         $('#mycolor').val(currentHex);
+            //     }
+            // });
            
 
 

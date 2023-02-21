@@ -19,8 +19,8 @@ define(function() {
     }, {
         
         'name': 'Leopard',
-        'layers': 20,
-        'thickness': 0.15,
+        'layers': 32,
+        'thickness': 0.06,
         'waveScale': 0.5,
         'diffuseTexture': 'fur-leo.png',
         'alphaTexture': 'uneven-alpha.png',
