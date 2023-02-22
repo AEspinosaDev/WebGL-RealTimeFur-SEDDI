@@ -31,7 +31,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'out vec3 vPos;\n' +
                 'out vec3 lightViewPos;\n' +
                 '\r\n' +
-
+             
 
                 '\r\n' +
                 'void main( void )\r\n' +
@@ -39,6 +39,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '    float f = float(gl_InstanceID+1) * shellOffset;\r\n' +
                 '    float layerCoeff = float(gl_InstanceID) / layersCount;\r\n' +
                 '    vec4 vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f, f, f, 0.0);\r\n' +
+              
                 '\r\n' +
                 '    gl_Position = view_proj_matrix * vertex;\r\n' +
                 '    vTexCoord0 = vec2(rm_TexCoord0);\r\n' +
@@ -48,7 +49,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  lightViewPos = (view_matrix * vec4(lightPos,1.0)).xyz;\n' +
                 '  finNormal = n;\n' +
                 '  vPos =  (view_model_matrix * vertex).xyz;\n' +
-                '}';
+                '}'
+              
 
             this.fragmentShaderCode = '#version 300 es\r\n' +
                 'precision highp float;\r\n' +

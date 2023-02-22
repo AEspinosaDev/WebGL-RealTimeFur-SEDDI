@@ -40,7 +40,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec4 vertex;\n' +
                 '  if(rm_Extrudable==1.0){\n' + //
                 '  k_alpha = 0.0;\n' +
-                '  vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f+0.1, f+0.1, f+0.1, 0.0);\n' +
+                '  vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f, f, f, 0.0);\n' +
                 '  }else{\n' +
                 '  k_alpha=1.25;\n' +
                 '  vertex = rm_Vertex;}\n' +
