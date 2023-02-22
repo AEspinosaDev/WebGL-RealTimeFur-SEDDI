@@ -40,7 +40,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec4 vertex;\n' +
                 '  if(rm_Extrudable==1.0){\n' + //
                 '  k_alpha = 0.0;\n' +
-                '  vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f, f, f, 0.0);\n' +
+                '  vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f+0.1, f+0.1, f+0.1, 0.0);\n' +
                 '  }else{\n' +
                 '  k_alpha=1.25;\n' +
                 '  vertex = rm_Vertex;}\n' +
@@ -70,6 +70,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform sampler2D alphaMap;\n' +
                 'uniform vec3 lightColor;\n' +
                 'uniform float intensity;\n' +
+                'uniform float curlyFrequency;\n' +
+                'uniform float curlyAmplitude;\n' +
 
                 'uniform int finOpacity;\n' +
 
@@ -82,7 +84,12 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec3 Kd;\n' +
                 '  float Ks;\n' +
                 '  float shininess = 8.0;\n' + //this should be a shininess texture
+                
+                '  float tx = 0.34771;\n' +
+                '  float ty = 0.7812;\n' +
 
+
+                'vec2 sineWave(vec2 uv0);\n' +
                 'vec4 computePointLight();\n' +
                 'vec4 computeHairLighting();\n' +
                 '\n' +
@@ -95,8 +102,11 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  p = 1.0-p;\n' +
                 '  alpha = max(0.0,2.0*abs(p)-1.0);\n' +
                 '  }\n' +
-                '   float outAlpha = alpha*texture(alphaMap, vTextureCoord).r;\n' +
-                '   Ka = texture(diffuseMap, vTextureCoord).rgb;\r\n' +
+
+                '   vec2 outTextCoord = sineWave(vTextureCoord);\n' +
+                '   float outAlpha = alpha*texture(alphaMap,outTextCoord ).r;\n' +
+                // '   float outAlpha = alpha*texture(alphaMap, vTextureCoord).r;\n' +
+                '   Ka = texture(diffuseMap, outTextCoord).rgb;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
 
@@ -125,8 +135,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 //Result
                 '  return vec4((ambient+diffuse+specular),1.0)*intensity;\n' +
                 '}\n' +
-
-
+                
+                
                 //Kayijas method
                 'vec4 computeHairLighting() {\n' +
                 '  vec3 L = normalize(lightViewPos-vPos);\n' + //LightDir
@@ -134,14 +144,19 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec3 H = normalize(L-V);\n' + //Halfway
                 '  vec3 N = normalize(finNormal);\n' + //Normal
                 '  vec3 T = N;\n' + //Hair direction :C
-
+                
                 '  float u =dot(T,L);\n' + //Lambertian
                 '  float v =dot(T,H);\n' + //Spec
-
-
+                
+                
                 '  vec3 color = Sa*Ka+Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5);\n' +
-
+                
                 '  return vec4(color,1.0)*intensity;\n' +
+                '}\n' +
+                ' vec2 sineWave(vec2 uv0) {\n' +
+                ' vec2 uv = uv0.xy;\n' + 
+                ' uv.x += sin(uv.y*curlyFrequency)*curlyAmplitude;\n' + //First param is frecuency, second one is wave length
+                '  return uv;\n' + 
                 '}'
         }
 
@@ -173,6 +188,8 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.specularPower = this.getUniform('Ps');
 
             this.finOpacity = this.getUniform('finOpacity');
+            this.curlyFrequency = this.getUniform('curlyFrequency');
+            this.curlyAmplitude = this.getUniform('curlyAmplitude');
 
         }
     }

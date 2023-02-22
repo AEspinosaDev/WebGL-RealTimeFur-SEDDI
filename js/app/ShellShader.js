@@ -18,12 +18,15 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform float stiffness;\r\n' +
                 'uniform vec3 lightPos;\n' +
                 '\r\n' +
+
                 'in vec4 rm_Vertex;\r\n' +
                 'in vec2 rm_TexCoord0;\r\n' +
                 'in vec3 rm_Normal;\r\n' +
                 '\r\n' +
+
                 'out vec2 vTexCoord0;\r\n' +
                 'out vec4 vAO;\r\n' +
+                'out float curlynessCoeff;\r\n' +
                 'out vec3 finNormal;\n' +
                 'out vec3 vPos;\n' +
                 'out vec3 lightViewPos;\n' +
@@ -40,6 +43,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '    gl_Position = view_proj_matrix * vertex;\r\n' +
                 '    vTexCoord0 = vec2(rm_TexCoord0);\r\n' +
                 '    vAO = mix(colorStart, colorEnd, layerCoeff);\r\n' +
+                '    curlynessCoeff = mix(0.0, 1.0, layerCoeff);\r\n' +
                 '  vec3 n = mat3(transpose(inverse(view_model_matrix))) * rm_Normal;\n' +
                 '  lightViewPos = (view_matrix * vec4(lightPos,1.0)).xyz;\n' +
                 '  finNormal = n;\n' +
@@ -48,15 +52,21 @@ define(['framework/BaseShader'], function (BaseShader) {
 
             this.fragmentShaderCode = '#version 300 es\r\n' +
                 'precision highp float;\r\n' +
+
                 'uniform sampler2D diffuseMap;\r\n' +
                 'uniform sampler2D alphaMap;\r\n' +
                 'uniform vec3 lightColor;\n' +
                 'uniform float intensity;\n' +
+                'uniform float curlyDegree;\n' +
+
+
                 'in vec2 vTexCoord0;\r\n' +
                 'in vec4 vAO;\r\n' +
                 'in vec3 finNormal;\n' +
                 'in vec3 vPos;\n' +
                 'in vec3 lightViewPos;\n' +
+                'in float curlynessCoeff;\r\n' +
+
                 'out vec4 fragColor;\r\n' +
 
                 //Powers
@@ -68,16 +78,22 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec3 Kd;\n' +
                 '  float Ks;\n' +
                 '  float shininess = 8.0;\n' + //this should be a shininess texture
+                
+                '  float tx = 0.6;\n' +
+                '  float ty = 0.1812;\n' +
 
+                'vec2 sineWave(vec2 uv0);\n' +
+                'vec2 rotateUV(vec2 uv, float rotation);\n' +
                 'vec4 computePointLight();\n' +
                 'vec4 computeHairLighting();\n' +
                 '\r\n' +
                 'void main()\r\n' +
                 '{\r\n' +
-                '   Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
+                '   vec2 outTextCoord = rotateUV(vTexCoord0,curlyDegree*curlynessCoeff);\n' +
+                '   Ka = texture(diffuseMap, outTextCoord).rgb;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
-                '   float alphaColor = texture(alphaMap, vTexCoord0).r;\r\n' +
+                '   float alphaColor = texture(alphaMap, outTextCoord).r;\r\n' +
                 // '   fragColor = computePointLight();\r\n' +
                 '   fragColor = computeHairLighting();\r\n' +
                 '   fragColor *= vAO;\r\n' +
@@ -112,14 +128,26 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec3 H = normalize(L-V);\n' + //Halfway
                 '  vec3 N = normalize(finNormal);\n' + //Normal
                 '  vec3 T = N;\n' + //Hair direction :C
-
+                
                 '  float u =dot(T,L);\n' + //Lambertian
                 '  float v =dot(T,H);\n' + //Spec
-
+                
                 '  vec3 color = Sa*Ka+Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5);\n' + 
-
+                
                 '  return vec4(color,1.0)*intensity;\n' +
-                '}' 
+                '}\n'+ 
+                ' vec2 sineWave(vec2 uv0) {\n' +
+                ' vec2 uv = uv0.xy;\n' + 
+                ' uv.x += sin(uv.y*200.0)/75.0;\n' + //First param is frecuency, second one is wave length
+                '  return uv;\n' + 
+                '}\n'+ 
+                'vec2 rotateUV(vec2 uv, float rotation) {\n' +
+                ' float mid = 0.5;\n' + 
+                '  return vec2(\n' + 
+                ' cos(rotation) * (uv.x - mid) + sin(rotation) * (uv.y - mid) + mid,\n' + 
+                '  cos(rotation) * (uv.y - mid) - sin(rotation) * (uv.x - mid) + mid\n' + 
+                '  );\n' + 
+                '}'
 
         }
 
@@ -145,6 +173,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.ambientStrength = this.getUniform('Sa');
             this.diffusePower = this.getUniform('Pd');
             this.specularPower = this.getUniform('Ps');
+            this.curlyDegree = this.getUniform('curlyDegree');
 
         }
     }

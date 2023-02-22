@@ -56,6 +56,20 @@ define([
                 this.renderFur = true;
                 this.finOpacity = false;
 
+                //HairProperties not in presets
+                this.curlyness = 0;
+                this.curlyDegree = 0;
+                this.curlyFrequency = 50;
+                this.curlyAmplitude = 0.008;
+                this.textureDensity = 0;
+                
+                this.CURLY_DEGREE_STEP = 0.2;
+                this.CURLY_FREQ_STEP = 15;
+                this.CURLY_FREQ_OFFSET = 50;
+                this.CURLY_AMP_STEP = 0.0006;
+                this.CURLY_AMP_OFFSET = 0.008;
+                
+
                 //Light
                 this.lightPos = [1000.0, 1000.0, 1000.0]; //point light //z,x,y because up is the last coord
                 this.lightColor = [1.0, 0.98, 0.92];
@@ -63,6 +77,7 @@ define([
                 this.shadowsEnabled = true;
                 
                 this.ambientStrength = 0.5;
+
 
                 this.ITEMS_TO_LOAD = 5; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
@@ -77,6 +92,9 @@ define([
                 this.FUR_ANIMATION_SPEED = 1500.0;
                 this.FUR_WIND_SPEED = 8310.0;
                 this.FUR_STIFFNESS = 2.75;
+                
+
+
             }
 
             /**
@@ -153,8 +171,8 @@ define([
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/plane.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/bunny.json', boundUpdateCallback);
-                //  this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
-                //this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
+                // this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
+                // this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
                 this.modelCube.loadJson('data/models/bear.json', boundUpdateCallback);
 
                 // this.textureChecker = UncompressedTextureLoader.load('data/textures/checker.png', boundUpdateCallback);
@@ -469,6 +487,8 @@ define([
                 gl.uniform1f(shader.diffusePower, preset.diffusePower);
                 gl.uniform1f(shader.specularPower, preset.specularPower);
 
+                gl.uniform1f(shader.curlyDegree, this.curlyDegree);
+
                 gl.drawElementsInstanced(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0, preset.layers);
 
             }
@@ -494,6 +514,9 @@ define([
                 gl.uniform1f(shader.ambientStrength, this.ambientStrength);
                 gl.uniform1f(shader.diffusePower, preset.diffusePower);
                 gl.uniform1f(shader.specularPower, preset.specularPower);
+
+                gl.uniform1f(shader.curlyFrequency, this.curlyFrequency);
+                gl.uniform1f(shader.curlyAmplitude, this.curlyAmplitude);
 
                 gl.uniform1i(shader.finOpacity, this.finOpacity);
 
