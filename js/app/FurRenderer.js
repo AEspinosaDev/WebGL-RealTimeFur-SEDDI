@@ -79,7 +79,7 @@ define([
                 this.ambientStrength = 0.5;
 
 
-                this.ITEMS_TO_LOAD = 5; // total number of OpenGL buffers+textures to load
+                this.ITEMS_TO_LOAD = 6; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
                 this.TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * this.FLOAT_SIZE_BYTES;
                 this.TRIANGLE_VERTICES_DATA_POS_OFFSET = 0;
@@ -169,11 +169,12 @@ define([
                 //this.modelCube.load('data/models/box10_rounded', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
-                //this.modelCube.loadJson('data/models/plane.json', boundUpdateCallback);
-                //this.modelCube.loadJson('data/models/bunny.json', boundUpdateCallback);
+                // this.modelCube.loadJson('data/models/plane.json', boundUpdateCallback);
+                // this.modelCube.loadJson('data/models/bunny.json', boundUpdateCallback);
+                this.modelCube.loadJson('data/models/bunnyUV.json', boundUpdateCallback);
                 // this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
                 // this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
-                this.modelCube.loadJson('data/models/bear.json', boundUpdateCallback);
+                // this.modelCube.loadJson('data/models/bear.json', boundUpdateCallback);
 
                 // this.textureChecker = UncompressedTextureLoader.load('data/textures/checker.png', boundUpdateCallback);
                 this.textureBackground = UncompressedTextureLoader.load('data/textures/bg-gradient.png', boundUpdateCallback);
@@ -182,6 +183,7 @@ define([
 
                 this.textureFurDiffuse = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('diffuseTexture'), boundUpdateCallback);
                 this.textureFurAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('alphaTexture'), boundUpdateCallback);
+                this.textureFurTipAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('tipAlphaTexture'), boundUpdateCallback);
                 this.textureFinAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('finAlphaTexture'), boundUpdateCallback);
 
 
@@ -416,19 +418,20 @@ define([
                 this.shaderFin.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderFin.diffuseMap);
                 this.setTexture2D(1, this.textureFinAlpha, this.shaderFin.alphaMap);
-
+                
                 if (this.renderFins) {
                     this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
                 }
-
+                
                 gl.depthMask(true);
                 // gl.enable(gl.BLEND);
                 gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
-
-
+                
+                
                 this.shaderShell.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
                 this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
+                this.setTexture2D(2, this.textureFurTipAlpha, this.shaderShell.alphaMapTip);
 
                 if (this.renderShells) {
                     this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
@@ -488,6 +491,9 @@ define([
                 gl.uniform1f(shader.specularPower, preset.specularPower);
 
                 gl.uniform1f(shader.curlyDegree, this.curlyDegree);
+
+                gl.uniform1f(shader.curlyFrequency, this.curlyFrequency);
+                gl.uniform1f(shader.curlyAmplitude, this.curlyAmplitude);
 
                 gl.drawElementsInstanced(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0, preset.layers);
 

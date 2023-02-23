@@ -34,19 +34,39 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'out vec4 vAO;\r\n' +
                 'out float k_alpha;\r\n' +
 
+                '\r\n' +
+                'mat4 rotationMatrix(vec3 axis, float angle) {\n' +
+                '   axis = normalize(axis);\n' +
+                '    float s = sin(angle);\n' +
+                '    float c = cos(angle);\n' +
+                '     float oc = 1.0 - c;\n' +
+                    
+                '    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,\n' +
+                '                 oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,\n' +
+                '                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,\n' +
+                '                0.0,                                0.0,                                0.0,                                1.0);\n' +
+                ' }\n' +
+                
+                ' vec3 rotate(vec3 v, vec3 axis, float angle) {\n' +
+                '     mat4 m = rotationMatrix(axis, angle);\n' +
+                '     return (m * vec4(v, 1.0)).xyz;\n' +
+                ' }\n' +
+
                 '\n' +
                 'void main() {\n' +
                 '  float f = hairLength;\r\n' +
                 '  vec4 vertex;\n' +
+                ' vec3  combedNormal = rm_Normal;\n' +
                 '  if(rm_Extrudable==1.0){\n' + //
                 '  k_alpha = 0.0;\n' +
-                '  vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f, f, f, 0.0);\n' +
+                '  combedNormal = rotate(normalize(rm_Normal),abs(rm_Tangent),0.0);\r\n' +
+                '  vertex = rm_Vertex + vec4(combedNormal, 0.0) * vec4(f, f, f, 0.0);\n' +
                 '  }else{\n' +
                 '  k_alpha=1.25;\n' +
                 '  vertex = rm_Vertex;}\n' +
                 '  gl_Position = view_proj_matrix * vertex;\n' +
                 '  vTextureCoord = rm_TexCoord0;\n' +
-                ' vec3 n = mat3(transpose(inverse(view_model_matrix))) * rm_Normal;\n' +
+                ' vec3 n = mat3(transpose(inverse(view_model_matrix))) * combedNormal;\n' +
                 // ' vec3 t = mat3(transpose(inverse(view_model_matrix))) * rm_Tangent;\n' +
                 // '  finNormal = cross(n,t);\n' +
                 '  lightViewPos = (view_matrix * vec4(lightPos,1.0)).xyz;\n' +
@@ -64,6 +84,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec4 vAO;\n' +
                 'in vec3 lightViewPos;\n' +
                 'in float k_alpha;\r\n' +
+                
 
 
                 'uniform sampler2D diffuseMap;\n' +
@@ -104,6 +125,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  }\n' +
 
                 '   vec2 outTextCoord = sineWave(vTextureCoord);\n' +
+               
                 '   float outAlpha = alpha*texture(alphaMap,outTextCoord ).r;\n' +
                 // '   float outAlpha = alpha*texture(alphaMap, vTextureCoord).r;\n' +
                 '   Ka = texture(diffuseMap, outTextCoord).rgb;\r\n' +

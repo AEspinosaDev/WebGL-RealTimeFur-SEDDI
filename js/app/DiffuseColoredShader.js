@@ -18,6 +18,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec4 rm_Vertex;\r\n' +
                 'in vec2 rm_TexCoord0;\r\n' +
                 'in vec3 rm_Normal;\r\n' +
+                'in vec3 rm_Tangent;\r\n' +
                 '\r\n' +
                 'out vec2 vTexCoord0;\r\n' +
                 'out vec3 finNormal;\n' +
@@ -33,6 +34,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec3 n = mat3(transpose(inverse(view_model_matrix))) * rm_Normal;\n' +
                 '  lightViewPos = (view_matrix * vec4(lightPos,1.0)).xyz;\n' +
                 '  finNormal = n;\n' +
+                '  rm_Tangent;\n' +
                 '  vPos =  (view_model_matrix * rm_Vertex).xyz;\n' +
                 '}';
 
@@ -101,6 +103,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.rm_Vertex = this.getAttrib('rm_Vertex');
             this.rm_TexCoord0 = this.getAttrib('rm_TexCoord0');
             this.rm_Normal = this.getAttrib('rm_Normal');
+            this.rm_Tangent = this.getAttrib('rm_Tangent');
             this.diffuseMap = this.getUniform('diffuseMap');
             this.lightPos = this.getUniform('lightPos');
             this.lightColor = this.getUniform('lightColor');
