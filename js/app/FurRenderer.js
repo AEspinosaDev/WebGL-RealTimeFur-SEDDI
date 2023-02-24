@@ -7,6 +7,7 @@ define([
     'ShadowMapShader',
     'FinShader',
     'VignetteShader',
+    'MouseGizmoShader',
     'DiffuseColoredShader',
     'framework/utils/MatrixUtils',
     'framework/FullModel',
@@ -22,6 +23,7 @@ define([
         ShadowMapShader,
         FinShader,
         VignetteShader,
+        MouseGizmoShader,
         DiffuseColoredShader,
         MatrixUtils,
         FullModel,
@@ -62,20 +64,31 @@ define([
                 this.curlyFrequency = 50;
                 this.curlyAmplitude = 0.008;
                 this.textureDensity = 0;
-                
+
                 this.CURLY_DEGREE_STEP = 0.2;
                 this.CURLY_FREQ_STEP = 15;
                 this.CURLY_FREQ_OFFSET = 50;
                 this.CURLY_AMP_STEP = 0.0006;
                 this.CURLY_AMP_OFFSET = 0.008;
-                
+
+                //Mouse and UI events
+                this.dragging = false;
+                this.combing = false;
+
+                // this.inMousePosition =[0,0];
+                // this.outMousePosition =[0,0];
+                this.settingsToggle = false;
+                this.mouseLastPosition = [-1, -1];
+                this.dragAngles = [0, 0];
+                this.rotationFactor = 10;
+
 
                 //Light
                 this.lightPos = [1000.0, 1000.0, 1000.0]; //point light //z,x,y because up is the last coord
                 this.lightColor = [1.0, 0.98, 0.92];
                 this.lightIntensity = 1.0;
                 this.shadowsEnabled = true;
-                
+
                 this.ambientStrength = 0.5;
 
 
@@ -92,7 +105,7 @@ define([
                 this.FUR_ANIMATION_SPEED = 1500.0;
                 this.FUR_WIND_SPEED = 8310.0;
                 this.FUR_STIFFNESS = 2.75;
-                
+
 
 
             }
@@ -134,6 +147,7 @@ define([
                 this.diffuseColoredShader = new DiffuseColoredShader();
                 this.shaderShell = new ShellShader();
                 this.shaderFin = new FinShader();
+                this.mouseGizmoShader = new MouseGizmoShader();
             }
 
             /**
@@ -235,15 +249,15 @@ define([
             set diffusePower(value) {
                 this.currentPreset['diffusePower'] = value;
             }
-          
+
             get diffusePower() {
                 return this.currentPreset['diffusePower'];
             }
             set specularPower(value) {
                 this.currentPreset['specularPower'] = value;
             }
-          
-          
+
+
             get specularPower() {
                 return this.currentPreset['specularPower'];
             }
@@ -352,9 +366,10 @@ define([
                     this.setCameraFOV(0.6);
                     this.shadowMapShader.use();
 
-                    this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.currentPreset, this.shadowMapShader, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
+                    this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.currentPreset, this.shadowMapShader, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
 
                 }
+
 
                 //Standard pass
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -384,6 +399,12 @@ define([
                 }
 
                 gl.disable(gl.BLEND);
+
+
+                // //UI Pass
+                // if(this.combing){
+                //     this.drawMouseCombGizmo(this.mouseGizmoShader);
+                // }
             }
 
             drawVignette(texture) {
@@ -410,7 +431,7 @@ define([
                 this.setTexture2D(0, texture, this.diffuseColoredShader.diffuseMap);
                 this.setTexture2D(1, this.depthTexture, this.diffuseColoredShader.depthMap);
                 gl.uniform4f(this.diffuseColoredShader.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
-                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, this.diffuseColoredShader, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
+                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, this.diffuseColoredShader, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
 
             }
 
@@ -418,25 +439,33 @@ define([
                 this.shaderFin.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderFin.diffuseMap);
                 this.setTexture2D(1, this.textureFinAlpha, this.shaderFin.alphaMap);
-                
+
                 if (this.renderFins) {
-                    this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
+                    this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
                 }
-                
+
                 gl.depthMask(true);
                 // gl.enable(gl.BLEND);
                 gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
-                
-                
+
+
                 this.shaderShell.use();
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
                 this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
                 this.setTexture2D(2, this.textureFurTipAlpha, this.shaderShell.alphaMapTip);
 
                 if (this.renderShells) {
-                    this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, this.anglePitch, this.angleYaw, 1, 1, 1);
+                    this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
                 }
 
+            }
+
+            drawMouseCombGizmo(shader) {
+                shader.use();
+
+                gl.uniform3f(shader.mousePosition, this.mouseLastPosition[0], this.mouseLastPosition[1], 0);
+
+                //gl.drawElements(gl.TRIANGLES, 0, gl.UNSIGNED_SHORT, 0);
             }
 
             drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
@@ -475,7 +504,7 @@ define([
                 gl.uniformMatrix4fv(shader.view_matrix, false, this.mVMatrix);
                 gl.uniformMatrix4fv(shader.view_model_matrix, false, this.mMVMatrix);
 
-                gl.uniform1f(shader.shellOffset, preset.hairLength/preset.layers);
+                gl.uniform1f(shader.shellOffset, preset.hairLength / preset.layers);
                 gl.uniform1f(shader.layersCount, preset.layers);
                 gl.uniform4f(shader.colorStart, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
                 gl.uniform4f(shader.colorEnd, preset.endColor[0], preset.endColor[1], preset.endColor[2], preset.endColor[3]);
@@ -537,18 +566,18 @@ define([
                 var timeNow = new Date().getTime(),
                     elapsed;
 
-                if (this.lastTime != 0) {
-                    elapsed = timeNow - this.lastTime;
+                // if (this.lastTime != 0) {
+                //     elapsed = timeNow - this.lastTime;
 
-                    this.angleYaw += elapsed / this.YAW_COEFF_NORMAL;
-                    this.angleYaw %= 360.0;
+                //     this.angleYaw += elapsed / this.YAW_COEFF_NORMAL;
+                //     this.angleYaw %= 360.0;
 
-                    this.furTimer += elapsed / this.FUR_ANIMATION_SPEED;
-                    this.furTimer %= 1.0;
+                //     this.furTimer += elapsed / this.FUR_ANIMATION_SPEED;
+                //     this.furTimer %= 1.0;
 
-                    this.windTimer += elapsed / this.FUR_WIND_SPEED;
-                    this.windTimer %= 1.0;
-                }
+                //     this.windTimer += elapsed / this.FUR_WIND_SPEED;
+                //     this.windTimer %= 1.0;
+                // }
 
                 this.lastTime = timeNow;
             }
@@ -583,6 +612,43 @@ define([
                     this.depthTexture,         // texture
                     0);                   // mip level
 
+
+            }
+
+            createRenderFBO() {
+
+                // create to render to
+                const targetTextureWidth = 256;
+                const targetTextureHeight = 256;
+                const targetTexture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+
+                {
+                    // define size and format of level 0
+                    const level = 0;
+                    const internalFormat = gl.RGBA;
+                    const border = 0;
+                    const format = gl.RGBA;
+                    const type = gl.UNSIGNED_BYTE;
+                    const data = null;
+                    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                        targetTextureWidth, targetTextureHeight, border,
+                        format, type, data);
+
+                    // set the filtering so we don't need mips
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                }
+                
+                // Create and bind the framebuffer
+                this.renderFramebuffer = gl.createFramebuffer();
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderFramebuffer);
+
+                // attach the texture as the first color attachment
+                const attachmentPoint = gl.COLOR_ATTACHMENT0;
+                gl.framebufferTexture2D(
+                    gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
 
             }
         }
