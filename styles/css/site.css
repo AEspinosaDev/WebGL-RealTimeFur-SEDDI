@@ -128,6 +128,11 @@ body {
     top: 50%
 }
 
+.control-icon.help {
+    left: 3%;
+    top: 84%
+}
+
 .control-icon.control-next {
     right: 40px;
     top: 50%

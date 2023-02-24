@@ -69,17 +69,22 @@ define([
                 this.CURLY_AMP_STEP = 0.0006;
                 this.CURLY_AMP_OFFSET = 0.008;
 
+                this.furColor = [0.89, 0.82, 0.65]
+
                 //Mouse and UI events
                 this.dragging = false;
                 this.combing = false;
+                this.resizingComb = false;
 
-                // this.inMousePosition =[0,0];
-                // this.outMousePosition =[0,0];
                 this.settingsToggle = false;
                 this.mouseLastPosition = [-1, -1];
+                this.mouseResizeLastPosition = [0, 0];
                 this.dragAngles = [0, 0];
                 this.rotationFactor = 10;
-
+                this.combRadius = 50;
+                
+                // this.inMousePosition =[0,0];
+                // this.outMousePosition =[0,0];
 
                 //Light
                 this.lightPos = [1000.0, 1000.0, 1000.0]; //point light //z,x,y because up is the last coord
@@ -403,8 +408,17 @@ define([
                 gl.clearColor(0.3, 0.3, 0.3, 1.0);
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+                if(this.combing || this.resizingComb){
+                    this.VignetteShader.use();
+                    gl.uniform1i( this.VignetteShader.isPostProcess, true);
+                    gl.uniform1f( this.VignetteShader.mouseRadio, this.combRadius);
+                    gl.uniform2f( this.VignetteShader.mousePos, this.mouseLastPosition[0],this.canvas.clientHeight-this.mouseLastPosition[1]);
+                    
+                }
+                
                 this.drawVignette(this.targetTexture);
-
+                
+                gl.uniform1i( this.VignetteShader.isPostProcess, false);
 
             }
 
@@ -509,10 +523,13 @@ define([
                 gl.uniform3f(shader.lightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
                 gl.uniform3f(shader.lightColor, this.lightColor[0], this.lightColor[1], this.lightColor[2]);
                 gl.uniform1f(shader.lightIntensity, this.lightIntensity);
-
+                
                 gl.uniform1f(shader.ambientStrength, this.ambientStrength);
                 gl.uniform1f(shader.diffusePower, preset.diffusePower);
                 gl.uniform1f(shader.specularPower, preset.specularPower);
+                
+                gl.uniform3f(shader.hairColor, this.furColor[0], this.furColor[1], this.furColor[2]);
+
 
                 gl.uniform1f(shader.curlyDegree, this.curlyDegree);
 
@@ -544,6 +561,8 @@ define([
                 gl.uniform1f(shader.ambientStrength, this.ambientStrength);
                 gl.uniform1f(shader.diffusePower, preset.diffusePower);
                 gl.uniform1f(shader.specularPower, preset.specularPower);
+
+                gl.uniform3f(shader.hairColor, this.furColor[0], this.furColor[1], this.furColor[2]);
 
                 gl.uniform1f(shader.curlyFrequency, this.curlyFrequency);
                 gl.uniform1f(shader.curlyAmplitude, this.curlyAmplitude);

@@ -57,7 +57,7 @@ define([
             // toggle settings visibility
             $('#toggleSettings').on('click', function (e) {
                 var $this = $(this),
-                    $controls = $('#row-settings, #nextPreset, #previousPreset');
+                    $controls = $('#row-settings, #nextPreset, #previousPreset, #help');
 
                 $this.toggleClass('open');
                 $controls.toggle();
@@ -125,22 +125,13 @@ define([
             $('#finOpacity').on('change', function () {
                 if (renderer.finOpacity) { renderer.finOpacity = false } else { renderer.finOpacity = true };
             });
-            // $('#lightColor').ColorPicker({
-            //     color: '#00ffff',
-            //     onShow: function(colpkr) {
-            //         $(colpkr).fadeIn(500);
-            //         return false;
-            //     },
-            //     onHide: function(colpkr) {
-            //         $(colpkr).fadeOut(500);
-            //         return false;
-            //     },
-            //     onChange: function(hsb, hex, rgb) {
-            //         $('#colorSelector div').css('backgroundColor', '#' + hex);
-            //         alert(hex);
-            //         $('#mycolor').val(currentHex);
-            //     }
-            // });
+            $("#furColor").change(function () {
+                var color =$(this).val();
+                const r = parseInt(color.substr(1, 2), 16)/255;
+                const g = parseInt(color.substr(3, 2), 16)/255;
+                const b = parseInt(color.substr(5, 2), 16)/255;
+                renderer.furColor = [r,g,b];
+            });
 
 
             //Mouse events
@@ -157,23 +148,36 @@ define([
                 renderer.mouseLastPosition[0] = event.clientX;
                 renderer.mouseLastPosition[1] = event.clientY;
                 if (!renderer.settingsToggle) {
-                    if (event.which == 1) {
+                    if (event.which == 2) {
                         renderer.dragging = true;
-                    } else if (event.which == 2) {
+                        document.body.style.cursor = 'all-scroll';
+                    }
+                    if (event.which == 1 && renderer.dragging == false) {
                         renderer.combing = true;
-
+                        document.body.style.cursor = 'none';
+                    }
+                    if (renderer.combing && event.which == 2) {
+                        renderer.dragging = false;
+                        renderer.combing = false;
+                        renderer.resizingComb = true;
+                        document.body.style.cursor = 'e-resize';
+                        renderer.mouseResizeLastPosition[0] = renderer.mouseLastPosition[0];
+                        renderer.mouseResizeLastPosition[1] = renderer.mouseLastPosition[1];
                     }
 
                 }
             });
-            $(window).mouseup(function (event) {
+            $(window).mouseup(function () {
                 renderer.dragging = false;
                 renderer.combing = false;
+                renderer.resizingComb = false;
+                document.body.style.cursor = 'context-menu';
             });
             $(window).mousemove(function (event) {
-                var clientCoords = "( " + event.clientX + ", " + event.clientY + " )";
+
                 var x = event.clientX;
                 var y = event.clientY;
+
                 if (renderer.dragging) {
                     var speed = renderer.rotationFactor / renderer.canvas.clientHeight;
                     var dx = speed * (x - renderer.mouseLastPosition[0]);
@@ -182,17 +186,33 @@ define([
                     renderer.dragAngles[0] += dy;
                     renderer.dragAngles[1] += dx;
 
-                } else if (renderer.combing) {
-
-
+                    renderer.mouseLastPosition[0] = x;
+                    renderer.mouseLastPosition[1] = y;
 
 
                 }
-                renderer.mouseLastPosition[0] = x;
-                renderer.mouseLastPosition[1] = y;
+                if (renderer.combing) {
+
+                    renderer.mouseLastPosition[0] = x;
+                    renderer.mouseLastPosition[1] = y;
+
+
+                }
+                if (renderer.resizingComb) {
+
+                    var speed = 1000 / renderer.canvas.clientHeight;
+                    var dx = speed * (x - renderer.mouseResizeLastPosition[0]);
+                    var dy = speed * (y - renderer.mouseResizeLastPosition[1]);
+
+                    renderer.combRadius += (dx + dy) * 0.5
+
+                    renderer.mouseResizeLastPosition[0] = x;
+                    renderer.mouseResizeLastPosition[1] = y;
+
+                }
             });
 
-
+            // object.style.cursor = 'all-scroll';
 
 
 

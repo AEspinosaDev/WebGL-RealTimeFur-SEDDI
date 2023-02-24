@@ -87,6 +87,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform float intensity;\n' +
                 'uniform float curlyDegree;\n' +
 
+                'uniform vec3 hairColor;\n' +
+
 
                 'in vec2 vTexCoord0;\r\n' +
                 'in vec4 vAO;\r\n' +
@@ -119,7 +121,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '{\r\n' +
                 // '   vec2 outTextCoord = vec2(vTexCoord0.x+textureOffset,vTexCoord0.y+textureOffset);\n' +
                 // '   outTextCoord = rotateUV(outTextCoord,curlyDegree*curlynessCoeff);\n' +
-                '   Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
+                // '   Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
+                '   Ka = hairColor;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
                 // '   float alphaColor = texture(alphaMap, outTextCoord).r;\r\n' +
@@ -208,6 +211,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.curlyDegree = this.getUniform('curlyDegree');
             this.curlyFrequency = this.getUniform('curlyFrequency');
             this.curlyAmplitude = this.getUniform('curlyAmplitude');
+            this.hairColor = this.getUniform('hairColor');
 
         }
     }

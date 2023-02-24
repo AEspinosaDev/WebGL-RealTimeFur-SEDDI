@@ -93,9 +93,10 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform float intensity;\n' +
                 'uniform float curlyFrequency;\n' +
                 'uniform float curlyAmplitude;\n' +
+                'uniform vec3 hairColor;\n' +
 
                 'uniform int finOpacity;\n' +
-
+                
                 'out vec4 fragColor;\n' +
 
                 ' uniform float Sa;\n' +
@@ -128,7 +129,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                
                 '   float outAlpha = alpha*texture(alphaMap,outTextCoord ).r;\n' +
                 // '   float outAlpha = alpha*texture(alphaMap, vTextureCoord).r;\n' +
-                '   Ka = texture(diffuseMap, outTextCoord).rgb;\r\n' +
+                // '   Ka = texture(diffuseMap, outTextCoord).rgb;\r\n' +
+                '   Ka = hairColor;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
 
@@ -212,6 +214,8 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.finOpacity = this.getUniform('finOpacity');
             this.curlyFrequency = this.getUniform('curlyFrequency');
             this.curlyAmplitude = this.getUniform('curlyAmplitude');
+
+            this.hairColor = this.getUniform('hairColor');
 
         }
     }
