@@ -7,7 +7,6 @@ define([
     'ShadowMapShader',
     'FinShader',
     'VignetteShader',
-    'MouseGizmoShader',
     'DiffuseColoredShader',
     'framework/utils/MatrixUtils',
     'framework/FullModel',
@@ -23,7 +22,6 @@ define([
         ShadowMapShader,
         FinShader,
         VignetteShader,
-        MouseGizmoShader,
         DiffuseColoredShader,
         MatrixUtils,
         FullModel,
@@ -147,7 +145,7 @@ define([
                 this.diffuseColoredShader = new DiffuseColoredShader();
                 this.shaderShell = new ShellShader();
                 this.shaderFin = new FinShader();
-                this.mouseGizmoShader = new MouseGizmoShader();
+                // this.mouseGizmoShader = new MouseGizmoShader();
             }
 
             /**
@@ -165,6 +163,7 @@ define([
                     .html(percent); // update loading progress
 
                 if (this.loadedItemsCount >= this.ITEMS_TO_LOAD) {
+                    this.createRenderFBO();
                     this.loaded = true; // allow rendering
                     console.log('Loaded all assets');
                     $('#row-progress').hide();
@@ -204,8 +203,8 @@ define([
                 this.vignette = new VignetteData();
                 this.vignette.initGL(gl);
 
-                //Shadow setup
-                this.createDepthFBO();
+
+                // this.createFBO(); 
 
             }
 
@@ -335,6 +334,7 @@ define([
                     return;
                 }
 
+
                 if (!this.loadingNextFur) {
                     if (this.textureFurDiffuseNext && this.textureFurAlphaNext) {
                         this.currentPreset = Object.assign({}, FurPresets.current());
@@ -347,33 +347,32 @@ define([
                         this.textureFurAlphaNext = null;
                     }
                 }
-
-
-                gl.enable(gl.DEPTH_TEST);
-                gl.enable(gl.CULL_FACE);
-                gl.cullFace(gl.BACK);
+                
+                this.resizeRenderFBO();
 
                 //Shadow mapping pass
-                if (this.shadowsEnabled) {
+                // if (this.shadowsEnabled) {
 
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
-                    gl.viewport(0, 0, this.depthTextureSize, this.depthTextureSize);
-                    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-
-
-                    this.positionCamera(this.lightPos, [0, 0, 0], [0, 0, 1]);
-                    this.setCameraFOV(0.6);
-                    this.shadowMapShader.use();
-
-                    this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.currentPreset, this.shadowMapShader, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
-
-                }
+                //     gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
+                //     gl.viewport(0, 0, this.depthTextureSize, this.depthTextureSize);
+                //     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 
-                //Standard pass
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+                //     this.positionCamera(this.lightPos, [0, 0, 0], [0, 0, 1]);
+                //     this.setCameraFOV(0.6);
+                //     this.shadowMapShader.use();
+
+                //     this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.currentPreset, this.shadowMapShader, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
+
+                // }
+                
                 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+                //Render to texture
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderFramebuffer);
+                // gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderFramebuffer);
+
                 gl.clearColor(0.3, 0.3, 0.3, 1.0);
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -390,9 +389,6 @@ define([
                 gl.disable(gl.CULL_FACE);
 
                 gl.enable(gl.BLEND);
-                // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); // too dim
-                // gl.blendFunc(gl.SRC_ALPHA, gl.ONE); // too bright
-                // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
 
                 if (this.renderFur) {
                     this.drawFur(this.textureFurDiffuse, this.textureFurAlpha, this.currentPreset);
@@ -401,10 +397,15 @@ define([
                 gl.disable(gl.BLEND);
 
 
-                // //UI Pass
-                // if(this.combing){
-                //     this.drawMouseCombGizmo(this.mouseGizmoShader);
-                // }
+                //Post process pass
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                
+                gl.clearColor(0.3, 0.3, 0.3, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+                this.drawVignette(this.targetTexture);
+
+
             }
 
             drawVignette(texture) {
@@ -474,12 +475,6 @@ define([
                 model.bindBuffersExtended(shader);
 
                 this.calculateMVPMatrix(tx, ty, tz, rx, ry, rz, sx, sy, sz);
-
-                // var lightViewPos = MatrixUtils.vec4.fromValues(this.lightPos[0],this.lightPos[1],this.lightPos[2],1);
-                // lightViewPos = MatrixUtils.vec4.transformMat4(lightViewPos,lightViewPos,this.mMVMatrix);
-                // this.lightPos[0]=lightViewPos[0];
-                // this.lightPos[1]=lightViewPos[1];
-                // this.lightPos[2]=lightViewPos[2];
 
                 gl.uniformMatrix4fv(shader.view_proj_matrix, false, this.mMVPMatrix);
                 gl.uniformMatrix4fv(shader.view_matrix, false, this.mVMatrix);
@@ -582,65 +577,62 @@ define([
                 this.lastTime = timeNow;
             }
 
-            createDepthFBO() {
+            // createDepthFBO() {
 
 
-                this.depthTexture = gl.createTexture();
-                this.depthTextureSize = 1024;
-                gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
-                gl.texImage2D(
-                    gl.TEXTURE_2D,      // target
-                    0,                  // mip level
-                    gl.DEPTH_COMPONENT24, // internal format
-                    this.depthTextureSize,   // width
-                    this.depthTextureSize,   // height
-                    0,                  // border
-                    gl.DEPTH_COMPONENT, // format
-                    gl.UNSIGNED_INT,    // type
-                    null);              // data
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            //     this.depthTexture = gl.createTexture();
+            //     this.depthTextureSize = 1024;
+            //     gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
+            //     gl.texImage2D(
+            //         gl.TEXTURE_2D,      // target
+            //         0,                  // mip level
+            //         gl.DEPTH_COMPONENT24, // internal format
+            //         this.depthTextureSize,   // width
+            //         this.depthTextureSize,   // height
+            //         0,                  // border
+            //         gl.DEPTH_COMPONENT, // format
+            //         gl.UNSIGNED_INT,    // type
+            //         null);              // data
+            //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-                this.depthFramebuffer = gl.createFramebuffer();
-                gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
-                gl.framebufferTexture2D(
-                    gl.FRAMEBUFFER,       // target
-                    gl.DEPTH_ATTACHMENT,  // attachment point
-                    gl.TEXTURE_2D,        // texture target
-                    this.depthTexture,         // texture
-                    0);                   // mip level
+            //     this.depthFramebuffer = gl.createFramebuffer();
+            //     gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
+            //     gl.framebufferTexture2D(
+            //         gl.FRAMEBUFFER,       // target
+            //         gl.DEPTH_ATTACHMENT,  // attachment point
+            //         gl.TEXTURE_2D,        // texture target
+            //         this.depthTexture,         // texture
+            //         0);                   // mip level
 
 
-            }
+            // }
 
             createRenderFBO() {
 
-                // create to render to
-                const targetTextureWidth = 256;
-                const targetTextureHeight = 256;
-                const targetTexture = gl.createTexture();
-                gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+                this.targetTexture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, this.targetTexture);
 
-                {
-                    // define size and format of level 0
-                    const level = 0;
-                    const internalFormat = gl.RGBA;
-                    const border = 0;
-                    const format = gl.RGBA;
-                    const type = gl.UNSIGNED_BYTE;
-                    const data = null;
-                    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                        targetTextureWidth, targetTextureHeight, border,
-                        format, type, data);
 
-                    // set the filtering so we don't need mips
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-                }
-                
+                // define size and format of level 0
+                const level = 0;
+                const internalFormat = gl.RGBA;
+                const border = 0;
+                const format = gl.RGBA;
+                const type = gl.UNSIGNED_BYTE;
+                const data = null;
+                gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                    this.canvas.clientWidth, this.canvas.clientHeight, border,
+                    format, type, data);
+
+                // set the filtering so we don't need mips
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+
                 // Create and bind the framebuffer
                 this.renderFramebuffer = gl.createFramebuffer();
                 gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderFramebuffer);
@@ -648,8 +640,37 @@ define([
                 // attach the texture as the first color attachment
                 const attachmentPoint = gl.COLOR_ATTACHMENT0;
                 gl.framebufferTexture2D(
-                    gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
+                    gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.targetTexture, level);
 
+
+                //Create depth attachment    
+                this.depthRenderBuffer = gl.createRenderbuffer();
+                gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthRenderBuffer);
+                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.canvas.clientWidth, this.canvas.clientHeight);
+                gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.depthRenderBuffer);
+
+            }
+            resizeRenderFBO(){
+                gl.bindTexture(gl.TEXTURE_2D, this.targetTexture);
+                // define size and format of level 0
+                const level = 0;
+                const internalFormat = gl.RGBA;
+                const border = 0;
+                const format = gl.RGBA;
+                const type = gl.UNSIGNED_BYTE;
+                const data = null;
+                gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                    this.canvas.clientWidth, this.canvas.clientHeight, border,
+                    format, type, data);
+
+                gl.enable(gl.DEPTH_TEST);
+                gl.enable(gl.CULL_FACE);
+                gl.cullFace(gl.BACK);
+                gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthRenderBuffer);
+                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.canvas.clientWidth, this.canvas.clientHeight);
+                gl.bindRenderbuffer(gl.RENDERBUFFER, null);
             }
         }
 

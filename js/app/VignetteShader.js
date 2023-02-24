@@ -23,7 +23,7 @@ define(['framework/BaseShader'], function(BaseShader) {
                 'uniform sampler2D sTexture;\n' +
                 '\n' +
                 'void main() {\n' +
-                '  gl_FragColor = texture2D(sTexture, vTextureCoord);\n' +
+                '  gl_FragColor = vec4(texture2D(sTexture, vTextureCoord).rgb,1.0);\n' +
                 '}';
         }
 
