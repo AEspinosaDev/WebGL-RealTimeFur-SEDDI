@@ -1,25 +1,27 @@
 'use strict';
 
-define(function() {
+define(function () {
 
     class BaseShader {
 
         /**
          * Constructor. Compiles shader.
          */
-        constructor() {
-            this.vertexShaderCode =  '';
+        constructor(TFVaryings) {
+            this.vertexShaderCode = '';
             this.fragmentShaderCode = '';
             this.program = null;
 
             this.fillCode();
-            this.initShader();
+
+            this.initShader(TFVaryings);
+
         }
 
         /**
          * Used to fill shader code. Put actual shader code to this.vertexShaderCode and this.fragmentShaderCode
          */
-        fillCode() {}
+        fillCode() { }
 
         getShader(gl, type, code) {
             var shader = gl.createShader(type);
@@ -38,7 +40,7 @@ define(function() {
         /**
          * Retrieve and save uniforms and attributes for actual shader here
          */
-        fillUniformsAttributes() {}
+        fillUniformsAttributes() { }
 
         /**
          * Get shader unform location
@@ -61,7 +63,7 @@ define(function() {
         /**
          * Initializes shader. No need to call this manually, this is called in constructor.
          */
-        initShader() {
+        initShader(varyingList) {
             var shaderProgram,
                 fragmentShader = this.getShader(gl, gl.FRAGMENT_SHADER, this.fragmentShaderCode),
                 vertexShader = this.getShader(gl, gl.VERTEX_SHADER, this.vertexShaderCode);
@@ -69,6 +71,16 @@ define(function() {
             shaderProgram = gl.createProgram();
             gl.attachShader(shaderProgram, vertexShader);
             gl.attachShader(shaderProgram, fragmentShader);
+
+            //If exists, then setup feedback transform
+            if (varyingList) {
+                gl.transformFeedbackVaryings(
+                    shaderProgram,
+                    varyingList,
+                    gl.SEPARATE_ATTRIBS,
+                );
+            }
+
             gl.linkProgram(shaderProgram);
 
             if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
@@ -82,7 +94,7 @@ define(function() {
 
             this.fillUniformsAttributes();
         }
-
+       
         /**
          * Activates shader.
          */

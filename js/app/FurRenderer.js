@@ -5,6 +5,7 @@ define([
     'jquery',
     'ShellShader',
     'ShadowMapShader',
+    'ComputeNormalShader',
     'FinShader',
     'VignetteShader',
     'DiffuseColoredShader',
@@ -20,6 +21,7 @@ define([
         $,
         ShellShader,
         ShadowMapShader,
+        ComputeNormalShader,
         FinShader,
         VignetteShader,
         DiffuseColoredShader,
@@ -72,6 +74,7 @@ define([
                 this.furColor = [0.89, 0.82, 0.65]
 
                 //Mouse and UI events
+                this.mouseMoving = false;
                 this.dragging = false;
                 this.combing = false;
                 this.resizingComb = false;
@@ -82,7 +85,10 @@ define([
                 this.dragAngles = [0, 0];
                 this.rotationFactor = 10;
                 this.combRadius = 50;
-                
+
+                this.combAngle = 0;
+                this.combViewDirection2D = [0, 0];
+
                 // this.inMousePosition =[0,0];
                 // this.outMousePosition =[0,0];
 
@@ -150,7 +156,7 @@ define([
                 this.diffuseColoredShader = new DiffuseColoredShader();
                 this.shaderShell = new ShellShader();
                 this.shaderFin = new FinShader();
-                // this.mouseGizmoShader = new MouseGizmoShader();
+                this.computeShader = new ComputeNormalShader(['combedNormal'])
             }
 
             /**
@@ -183,7 +189,7 @@ define([
             loadData() {
                 var boundUpdateCallback = this.updateLoadedObjectsCount.bind(this);
 
-                this.modelCube = new FullModel();
+                this.modelCube = new FullModel(true);
                 //this.modelCube.load('data/models/box10_rounded', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
@@ -352,7 +358,7 @@ define([
                         this.textureFurAlphaNext = null;
                     }
                 }
-                
+
                 this.resizeRenderFBO();
 
                 //Shadow mapping pass
@@ -371,7 +377,7 @@ define([
                 //     this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.currentPreset, this.shadowMapShader, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
 
                 // }
-                
+
                 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
                 //Render to texture
@@ -390,6 +396,11 @@ define([
 
                 this.drawCubeDiffuse(this.textureFurDiffuse, this.currentPreset);
 
+                if (this.combing && this.mouseMoving) {
+                    //Compute shader for normals
+                    this.computeCombedNormals(this.computeShader, this.modelCube);
+                }
+
                 gl.depthMask(false);
                 gl.disable(gl.CULL_FACE);
 
@@ -404,21 +415,22 @@ define([
 
                 //Post process pass
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-                
+
                 gl.clearColor(0.3, 0.3, 0.3, 1.0);
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-                if(this.combing || this.resizingComb){
+
+                //Post process only
+                if (this.combing || this.resizingComb) {
                     this.VignetteShader.use();
-                    gl.uniform1i( this.VignetteShader.isPostProcess, true);
-                    gl.uniform1f( this.VignetteShader.mouseRadio, this.combRadius);
-                    gl.uniform2f( this.VignetteShader.mousePos, this.mouseLastPosition[0],this.canvas.clientHeight-this.mouseLastPosition[1]);
-                    
+                    gl.uniform1i(this.VignetteShader.isPostProcess, true);
+                    gl.uniform1f(this.VignetteShader.mouseRadio, this.combRadius);
+                    gl.uniform2f(this.VignetteShader.mousePos, this.mouseLastPosition[0], this.canvas.clientHeight - this.mouseLastPosition[1]);
+
                 }
-                
                 this.drawVignette(this.targetTexture);
-                
-                gl.uniform1i( this.VignetteShader.isPostProcess, false);
+
+                gl.uniform1i(this.VignetteShader.isPostProcess, false);
 
             }
 
@@ -475,13 +487,6 @@ define([
 
             }
 
-            drawMouseCombGizmo(shader) {
-                shader.use();
-
-                gl.uniform3f(shader.mousePosition, this.mouseLastPosition[0], this.mouseLastPosition[1], 0);
-
-                //gl.drawElements(gl.TRIANGLES, 0, gl.UNSIGNED_SHORT, 0);
-            }
 
             drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, shader, model, tx, ty, tz, rx, ry, rz, sx, sy, sz) {
 
@@ -523,11 +528,11 @@ define([
                 gl.uniform3f(shader.lightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
                 gl.uniform3f(shader.lightColor, this.lightColor[0], this.lightColor[1], this.lightColor[2]);
                 gl.uniform1f(shader.lightIntensity, this.lightIntensity);
-                
+
                 gl.uniform1f(shader.ambientStrength, this.ambientStrength);
                 gl.uniform1f(shader.diffusePower, preset.diffusePower);
                 gl.uniform1f(shader.specularPower, preset.specularPower);
-                
+
                 gl.uniform3f(shader.hairColor, this.furColor[0], this.furColor[1], this.furColor[2]);
 
 
@@ -535,6 +540,7 @@ define([
 
                 gl.uniform1f(shader.curlyFrequency, this.curlyFrequency);
                 gl.uniform1f(shader.curlyAmplitude, this.curlyAmplitude);
+
 
                 gl.drawElementsInstanced(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0, preset.layers);
 
@@ -572,6 +578,37 @@ define([
                 gl.drawElements(gl.TRIANGLES, model.numFinIndices, gl.UNSIGNED_SHORT, 0);
 
             }
+            computeCombedNormals(computeShader, model) {
+                computeShader.use();
+
+                gl.uniform3f(computeShader.combViewDir3D, 0, this.combViewDirection2D[0], this.combViewDirection2D[1]);
+                gl.uniform1f(computeShader.combAngle, this.combAngle);
+                gl.uniformMatrix4fv(computeShader.view_model_matrix, false, this.mMVMatrix);
+
+                model.bindTransformFeedbackBuffers(computeShader);
+
+                gl.enable(gl.RASTERIZER_DISCARD);
+
+                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, model.transformFeedback);
+                gl.beginTransformFeedback(gl.POINTS);
+                gl.drawArrays(gl.POINTS, 0, model.numVertices);
+                gl.endTransformFeedback();
+                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+
+                gl.disable(gl.RASTERIZER_DISCARD);
+
+                //save it in normal buffer
+                gl.bindBuffer(gl.ARRAY_BUFFER, model.TFOutput);
+                const modifiedNormals = new Float32Array(model.numVertices * 3);
+                gl.getBufferSubData(
+                    gl.ARRAY_BUFFER,
+                    0,    // byte offset into GPU buffer,
+                    modifiedNormals,
+                );
+                gl.bindBuffer(gl.ARRAY_BUFFER, model.bufferNormals);
+                gl.bufferData(gl.ARRAY_BUFFER, modifiedNormals, gl.STATIC_DRAW);
+
+            }
 
             /**
              * Updates camera rotation
@@ -579,19 +616,6 @@ define([
             animate() {
                 var timeNow = new Date().getTime(),
                     elapsed;
-
-                // if (this.lastTime != 0) {
-                //     elapsed = timeNow - this.lastTime;
-
-                //     this.angleYaw += elapsed / this.YAW_COEFF_NORMAL;
-                //     this.angleYaw %= 360.0;
-
-                //     this.furTimer += elapsed / this.FUR_ANIMATION_SPEED;
-                //     this.furTimer %= 1.0;
-
-                //     this.windTimer += elapsed / this.FUR_WIND_SPEED;
-                //     this.windTimer %= 1.0;
-                // }
 
                 this.lastTime = timeNow;
             }
@@ -671,7 +695,7 @@ define([
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.depthRenderBuffer);
 
             }
-            resizeRenderFBO(){
+            resizeRenderFBO() {
                 gl.bindTexture(gl.TEXTURE_2D, this.targetTexture);
                 // define size and format of level 0
                 const level = 0;

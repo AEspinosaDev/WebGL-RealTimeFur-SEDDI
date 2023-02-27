@@ -29,7 +29,7 @@ class Edge {
 
 }
 class Vertex {
-    constructor(id, pos, normal,tangent) {
+    constructor(id, pos, normal, tangent) {
         this.ID = id;
         this.pos = pos;
         this.normal = normal;
@@ -43,10 +43,11 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
      * Class to represent mesh data
      * @class
      */
-    function FullModel() {
+    function FullModel(transformFeedback) {
         this.bufferIndices = null;
         this.bufferStrides = null;
         this.numIndices = 0;
+        this.transformFeedback = transformFeedback;
     }
 
     FullModel.prototype = {
@@ -106,7 +107,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 var edgeMaxLength = 0;
 
                 for (let i = 0; i < vertices.length; i += 3) {
-                    auxVertices.push(new Vertex(i, [vertices[i], vertices[i + 1], vertices[i + 2]], [normals[i], normals[i + 1], normals[i + 2]],[tangents[i], tangents[i + 1], tangents[i + 2]]))
+                    auxVertices.push(new Vertex(i, [vertices[i], vertices[i + 1], vertices[i + 2]], [normals[i], normals[i + 1], normals[i + 2]], [tangents[i], tangents[i + 1], tangents[i + 2]]))
                 }
 
                 for (let i = 0; i < indexList.length; i += 3) {
@@ -119,16 +120,16 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                             //La arista no está en el diccionario
                             auxEdges.push(edge);
 
-                            var vector = [auxVertices[edge.a_ID].pos[0]-auxVertices[edge.b_ID].pos[0],
-                            auxVertices[edge.a_ID].pos[1]-auxVertices[edge.b_ID].pos[1],
-                            auxVertices[edge.a_ID].pos[2]-auxVertices[edge.b_ID].pos[2]];
+                            var vector = [auxVertices[edge.a_ID].pos[0] - auxVertices[edge.b_ID].pos[0],
+                            auxVertices[edge.a_ID].pos[1] - auxVertices[edge.b_ID].pos[1],
+                            auxVertices[edge.a_ID].pos[2] - auxVertices[edge.b_ID].pos[2]];
 
-                            edge.length = Math.pow(vector[0],2)+ Math.pow(vector[1],2)+ Math.pow(vector[2],2);
-                            if(edge.length>edgeMaxLength){edgeMaxLength=edge.length};
+                            edge.length = Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2);
+                            if (edge.length > edgeMaxLength) { edgeMaxLength = edge.length };
 
                             edgeMap.set(edge.hash, edge);
                         }
-                        
+
                     });
                 }
                 // console.log(edgeMaxLength);
@@ -154,7 +155,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                         finVertices.push(auxVertices[auxEdges[i].a_ID].pos[j]);
                         finNormals.push(auxVertices[auxEdges[i].a_ID].normal[j]);
                         finTangents.push(auxVertices[auxEdges[i].a_ID].tangent[j]);
-                        
+
                     }
                     finUVs.push(-offset);
                     finUVs.push(-0.5);
@@ -164,7 +165,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                         finNormals.push(auxVertices[auxEdges[i].b_ID].normal[j]);
                         finTangents.push(auxVertices[auxEdges[i].b_ID].tangent[j]);
                     }
-                    finUVs.push(-offset-length);
+                    finUVs.push(-offset - length);
                     finUVs.push(-0.5);
                     finExtrudables.push(0);
                     for (let j = 0; j < 3; j++) {
@@ -172,7 +173,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                         finNormals.push(auxVertices[auxEdges[i].b_ID].normal[j]);
                         finTangents.push(auxVertices[auxEdges[i].b_ID].tangent[j]);
                     }
-                    finUVs.push(-offset-length);
+                    finUVs.push(-offset - length);
                     finUVs.push(-0.55);
                     finExtrudables.push(1);
                     for (let j = 0; j < 3; j++) {
@@ -186,7 +187,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
 
                 }
 
-               
+
                 // console.log(finIndices);
 
                 //BIND FIN BUFFERS
@@ -219,6 +220,27 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finExtrudables), gl.STATIC_DRAW);
             }
 
+            function createTransformFeedback(data) {
+                // Create and fill out a transform feedback
+                root.transformFeedback = gl.createTransformFeedback();
+                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, root.transformFeedback);
+                // make buffer for output
+                root.TFOutput = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, root.TFOutput);
+                gl.bufferData(gl.ARRAY_BUFFER, data.length*4, gl.STATIC_DRAW);
+
+
+                // bind the buffers to the transform feedback
+                gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, root.TFOutput);
+
+
+                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+
+                // buffer's we are writing to can not be bound else where
+                gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+            }
+
             JsonDataLoader.load(url,
                 function (data) {
                     root.bufferIndices = gl.createBuffer();
@@ -229,6 +251,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, root.bufferIndices);
                     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexList), gl.STATIC_DRAW);
                     root.numIndices = indexList.length;
+
                     root.bufferIndices && root.bufferStrides && callback();
 
                 }
@@ -236,6 +259,8 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             );
             JsonDataLoader.load(url,
                 function (data) {
+                    root.numVertices = data.meshes[0].vertices.length/3;
+
                     root.bufferStrides = gl.createBuffer();
                     gl.bindBuffer(gl.ARRAY_BUFFER, root.bufferStrides);
                     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].vertices), gl.STATIC_DRAW);
@@ -253,6 +278,10 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                     //Precompute fins ->
                     precomputeFinGeometry(data.meshes[0].faces, data.meshes[0].vertices, data.meshes[0].normals, data.meshes[0].tangents);
 
+                    //Only if enabled, create transform feedback for vertex shader to write on ->
+                    if (root.transformFeedback) {
+                        createTransformFeedback(data.meshes[0].normals);
+                    }
 
                     root.bufferIndices && root.bufferStrides && callback();
                 }
@@ -271,7 +300,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
 
         bindBuffersExtended: function (shader) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferIndices);
-            
+
             gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides);
             gl.enableVertexAttribArray(shader.rm_Vertex);
             gl.vertexAttribPointer(shader.rm_Vertex, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
@@ -285,10 +314,8 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 gl.enableVertexAttribArray(shader.rm_Normal);
                 gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
             }
-           
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTangents);
-                gl.enableVertexAttribArray(shader.rm_Tangent);
-                gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+
+         
 
         },
         bindFinsBuffersExtended: function (shader) {
@@ -314,6 +341,21 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             gl.enableVertexAttribArray(shader.rm_Extrudable);
             gl.vertexAttribPointer(shader.rm_Extrudable, 1, gl.FLOAT, false, Float32Array.BYTES_PER_ELEMENT, 0);
 
+
+        },
+        bindTransformFeedbackBuffers: function (shader) {
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides);
+            gl.enableVertexAttribArray(shader.rm_Vertex);
+            gl.vertexAttribPointer(shader.rm_Vertex, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferNormals);
+            gl.enableVertexAttribArray(shader.rm_Normal);
+            gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTangents);
+            gl.enableVertexAttribArray(shader.rm_Tangent);
+            gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 
         },
 

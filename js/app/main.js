@@ -126,11 +126,11 @@ define([
                 if (renderer.finOpacity) { renderer.finOpacity = false } else { renderer.finOpacity = true };
             });
             $("#furColor").change(function () {
-                var color =$(this).val();
-                const r = parseInt(color.substr(1, 2), 16)/255;
-                const g = parseInt(color.substr(3, 2), 16)/255;
-                const b = parseInt(color.substr(5, 2), 16)/255;
-                renderer.furColor = [r,g,b];
+                var color = $(this).val();
+                const r = parseInt(color.substr(1, 2), 16) / 255;
+                const g = parseInt(color.substr(3, 2), 16) / 255;
+                const b = parseInt(color.substr(5, 2), 16) / 255;
+                renderer.furColor = [r, g, b];
             });
 
 
@@ -168,13 +168,17 @@ define([
                 }
             });
             $(window).mouseup(function () {
+                renderer.mouseMoving = false;
                 renderer.dragging = false;
                 renderer.combing = false;
                 renderer.resizingComb = false;
                 document.body.style.cursor = 'context-menu';
+                renderer.combAngle = 0;
+
             });
             $(window).mousemove(function (event) {
 
+                renderer.mouseMoving = true;
                 var x = event.clientX;
                 var y = event.clientY;
 
@@ -186,13 +190,23 @@ define([
                     renderer.dragAngles[0] += dy;
                     renderer.dragAngles[1] += dx;
 
-                    renderer.mouseLastPosition[0] = x;
+                    renderer.mouseLastPosition[0] = x;  
                     renderer.mouseLastPosition[1] = y;
 
 
                 }
                 if (renderer.combing) {
 
+                    var speed = renderer.rotationFactor / renderer.canvas.clientHeight;
+                    var dx = speed * (x - renderer.mouseLastPosition[0]);
+                    var dy = speed * (y - renderer.mouseLastPosition[1]);
+
+                    if (renderer.combAngle <= 0.75) {
+                        renderer.combAngle += 0.05 * Math.sqrt(dx * dx + dy * dy);
+                    }
+
+                    renderer.combViewDirection2D = [dx, dy];
+                    // console.log(renderer.combViewDirection2D);
                     renderer.mouseLastPosition[0] = x;
                     renderer.mouseLastPosition[1] = y;
 
@@ -204,8 +218,10 @@ define([
                     var dx = speed * (x - renderer.mouseResizeLastPosition[0]);
                     var dy = speed * (y - renderer.mouseResizeLastPosition[1]);
 
-                    renderer.combRadius += (dx + dy) * 0.5
-
+                    if (renderer.combRadius >= 0) {
+                        renderer.combRadius += (dx + dy) * 0.5;
+                        if (renderer.combRadius < 0) { renderer.combRadius = 0; }
+                    }
                     renderer.mouseResizeLastPosition[0] = x;
                     renderer.mouseResizeLastPosition[1] = y;
 
