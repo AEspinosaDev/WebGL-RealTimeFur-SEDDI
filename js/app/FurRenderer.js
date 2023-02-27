@@ -5,7 +5,7 @@ define([
     'jquery',
     'ShellShader',
     'ShadowMapShader',
-    'ComputeNormalShader',
+    'ComputeShellNormalShader',
     'FinShader',
     'VignetteShader',
     'DiffuseColoredShader',
@@ -21,7 +21,7 @@ define([
         $,
         ShellShader,
         ShadowMapShader,
-        ComputeNormalShader,
+        ComputeShellNormalShader,
         FinShader,
         VignetteShader,
         DiffuseColoredShader,
@@ -101,7 +101,7 @@ define([
                 this.ambientStrength = 0.5;
 
 
-                this.ITEMS_TO_LOAD = 6; // total number of OpenGL buffers+textures to load
+                this.ITEMS_TO_LOAD = 5; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
                 this.TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * this.FLOAT_SIZE_BYTES;
                 this.TRIANGLE_VERTICES_DATA_POS_OFFSET = 0;
@@ -156,7 +156,7 @@ define([
                 this.diffuseColoredShader = new DiffuseColoredShader();
                 this.shaderShell = new ShellShader();
                 this.shaderFin = new FinShader();
-                this.computeShader = new ComputeNormalShader(['combedNormal'])
+                this.computeShader = new ComputeShellNormalShader(['combedNormal'])
             }
 
             /**
@@ -205,7 +205,7 @@ define([
 
                 this.currentPreset = Object.assign({}, FurPresets.current());
 
-                this.textureFurDiffuse = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('diffuseTexture'), boundUpdateCallback);
+                // this.textureFurDiffuse = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('diffuseTexture'), boundUpdateCallback);
                 this.textureFurAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('alphaTexture'), boundUpdateCallback);
                 this.textureFurTipAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('tipAlphaTexture'), boundUpdateCallback);
                 this.textureFinAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('finAlphaTexture'), boundUpdateCallback);
@@ -235,6 +235,7 @@ define([
 
                 this.textureFurDiffuseNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('diffuseTexture'), callback);
                 this.textureFurAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('alphaTexture'), callback);
+                this.textureFurAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('tipAlphaTexture'), callback);
             }
 
             get layers() {
@@ -605,7 +606,7 @@ define([
                     0,    // byte offset into GPU buffer,
                     modifiedNormals,
                 );
-                gl.bindBuffer(gl.ARRAY_BUFFER, model.bufferNormals);
+                gl.bindBuffer(gl.ARRAY_BUFFER, model.bufferCombNormals);
                 gl.bufferData(gl.ARRAY_BUFFER, modifiedNormals, gl.STATIC_DRAW);
 
             }

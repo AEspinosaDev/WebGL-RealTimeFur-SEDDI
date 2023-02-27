@@ -272,9 +272,14 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                     gl.bindBuffer(gl.ARRAY_BUFFER, root.bufferNormals);
                     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].normals), gl.STATIC_DRAW);
 
+                    root.bufferCombNormals = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, root.bufferCombNormals);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].normals), gl.STATIC_DRAW);
+
                     root.bufferTangents = gl.createBuffer();
                     gl.bindBuffer(gl.ARRAY_BUFFER, root.bufferTangents);
                     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.meshes[0].tangents), gl.STATIC_DRAW);
+
                     //Precompute fins ->
                     precomputeFinGeometry(data.meshes[0].faces, data.meshes[0].vertices, data.meshes[0].normals, data.meshes[0].tangents);
 
@@ -309,11 +314,17 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             gl.enableVertexAttribArray(shader.rm_TexCoord0);
             gl.vertexAttribPointer(shader.rm_TexCoord0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
 
-            if (shader.rm_Normal != -1) {
+            if (shader.rm_Normal) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferNormals);
                 gl.enableVertexAttribArray(shader.rm_Normal);
                 gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
             }
+            if (shader.rm_C_Normal) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferCombNormals);
+                gl.enableVertexAttribArray(shader.rm_C_Normal);
+                gl.vertexAttribPointer(shader.rm_C_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+            }
+
 
          
 
@@ -353,9 +364,14 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             gl.enableVertexAttribArray(shader.rm_Normal);
             gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferCombNormals);
+            gl.enableVertexAttribArray(shader.rm_C_Normal);
+            gl.vertexAttribPointer(shader.rm_C_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+
             gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTangents);
             gl.enableVertexAttribArray(shader.rm_Tangent);
             gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+
 
         },
 

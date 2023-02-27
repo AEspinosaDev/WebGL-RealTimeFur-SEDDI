@@ -27,6 +27,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec4 rm_Vertex;\r\n' +
                 'in vec2 rm_TexCoord0;\r\n' +
                 'in vec3 rm_Normal;\r\n' +
+                'in vec3 rm_C_Normal;\r\n' +
                 'in vec3 rm_Tangent;\r\n' +
                 '\r\n' +
 
@@ -44,7 +45,7 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 '    float layerCoeff = float(gl_InstanceID) / layersCount;\r\n' +
             
-                '    vec4 vertex = rm_Vertex + vec4(rm_Normal, 0.0) * vec4(f, f, f, 0.0);\r\n' +
+                '    vec4 vertex = rm_Vertex + vec4(rm_C_Normal, 0.0) * vec4(f, f, f, 0.0);\r\n' +
 
                 '    gl_Position = view_proj_matrix * vertex;\r\n' +
 
@@ -54,12 +55,12 @@ define(['framework/BaseShader'], function (BaseShader) {
                 
                 '    curlynessCoeff = mix(0.0, 1.0, layerCoeff);\r\n' +
 
-                '   hairNormal = mat3(transpose(inverse(view_model_matrix))) * rm_Normal;\n' +
+                '   hairNormal = mat3(transpose(inverse(view_model_matrix))) * rm_C_Normal;\n' +
 
                 '    lightViewPos = (view_matrix * vec4(lightPos,1.0)).xyz;\n' +
 
                 '    vPos =  (view_model_matrix * vertex).xyz;\n' +
-                // '    textureOffset = sin(layerCoeff*05.0)/200.0;\n' +
+                // '    textureOffset = sin(layerCoeff*0.75)/100.0;\n' +
                 '}'
 
 
@@ -106,8 +107,6 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'void main()\r\n' +
                 '{\r\n' +
                 // '   vec2 outTextCoord = vec2(vTexCoord0.x+textureOffset,vTexCoord0.y+textureOffset);\n' +
-                // '   outTextCoord = rotateUV(outTextCoord,curlyDegree*curlynessCoeff);\n' +
-                // '   Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
                 '   Ka = hairColor;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
@@ -176,7 +175,8 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.view_model_matrix = this.getUniform('view_model_matrix');
             this.rm_Vertex = this.getAttrib('rm_Vertex');
             this.rm_TexCoord0 = this.getAttrib('rm_TexCoord0');
-            this.rm_Normal = this.getAttrib('rm_Normal');
+            // this.rm_Normal = this.getAttrib('rm_Normal');
+            this.rm_C_Normal = this.getAttrib('rm_C_Normal');
             this.rm_Tangent = this.getAttrib('rm_Tangent');
             this.diffuseMap = this.getUniform('diffuseMap');
             this.alphaMap = this.getUniform('alphaMap');

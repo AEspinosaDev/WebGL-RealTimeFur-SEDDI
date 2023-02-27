@@ -148,15 +148,15 @@ define([
                 renderer.mouseLastPosition[0] = event.clientX;
                 renderer.mouseLastPosition[1] = event.clientY;
                 if (!renderer.settingsToggle) {
-                    if (event.which == 2) {
+                    if (event.which == 1) {
                         renderer.dragging = true;
                         document.body.style.cursor = 'all-scroll';
                     }
-                    if (event.which == 1 && renderer.dragging == false) {
+                    if (event.which == 2 && renderer.dragging == false) {
                         renderer.combing = true;
                         document.body.style.cursor = 'none';
                     }
-                    if (renderer.combing && event.which == 2) {
+                    if (renderer.combing && event.which == 1) {
                         renderer.dragging = false;
                         renderer.combing = false;
                         renderer.resizingComb = true;
@@ -190,7 +190,7 @@ define([
                     renderer.dragAngles[0] += dy;
                     renderer.dragAngles[1] += dx;
 
-                    renderer.mouseLastPosition[0] = x;  
+                    renderer.mouseLastPosition[0] = x;
                     renderer.mouseLastPosition[1] = y;
 
 
@@ -201,9 +201,9 @@ define([
                     var dx = speed * (x - renderer.mouseLastPosition[0]);
                     var dy = speed * (y - renderer.mouseLastPosition[1]);
 
-                    if (renderer.combAngle <= 0.75) {
-                        renderer.combAngle += 0.05 * Math.sqrt(dx * dx + dy * dy);
-                    }
+
+                    renderer.combAngle = 0.75*Math.sqrt(dx * dx + dy * dy);
+
 
                     renderer.combViewDirection2D = [dx, dy];
                     // console.log(renderer.combViewDirection2D);

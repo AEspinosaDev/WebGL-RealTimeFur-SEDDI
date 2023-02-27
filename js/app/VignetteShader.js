@@ -53,6 +53,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.mousePos = this.getUniform('mousePos');
             this.mouseRadio = this.getUniform('mouseRadio');
             this.rm_Normal = -1;
+            this.rm_C_Normal = -1;
         }
     }
 
