@@ -75,6 +75,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform float curlyDegree;\n' +
 
                 'uniform vec3 hairColor;\n' +
+                'uniform float textureFactor;\n' +
 
 
                 'in vec2 vTexCoord0;\r\n' +
@@ -110,9 +111,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '   Ka = hairColor;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
-                // '   float alphaColor = texture(alphaMap, outTextCoord).r;\r\n' +
-                '   float alphaColor = mix(texture(alphaMap, vTexCoord0).r,texture(alphaMapTip, vTexCoord0).r,curlynessCoeff-0.2);\r\n' +
-                // '   fragColor = computePointLight();\r\n' +
+                '   float alphaColor = mix(texture(alphaMap, vTexCoord0*textureFactor).r,texture(alphaMapTip, vTexCoord0*textureFactor).r,curlynessCoeff-0.2);\r\n' +
                 '   fragColor = computeHairLighting();\r\n' +
                 '   fragColor *= vAO;\r\n' +
 
@@ -178,6 +177,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             // this.rm_Normal = this.getAttrib('rm_Normal');
             this.rm_C_Normal = this.getAttrib('rm_C_Normal');
             this.rm_Tangent = this.getAttrib('rm_Tangent');
+            
             this.diffuseMap = this.getUniform('diffuseMap');
             this.alphaMap = this.getUniform('alphaMap');
             this.alphaMapTip = this.getUniform('alphaMapTip');
@@ -188,16 +188,22 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.time = this.getUniform('time');
             this.waveScale = this.getUniform('waveScale');
             this.stiffness = this.getUniform('stiffness');
+
             this.lightPos = this.getUniform('lightPos');
             this.lightColor = this.getUniform('lightColor');
             this.lightIntensity = this.getUniform('intensity');
             this.ambientStrength = this.getUniform('Sa');
             this.diffusePower = this.getUniform('Pd');
             this.specularPower = this.getUniform('Ps');
+
             this.curlyDegree = this.getUniform('curlyDegree');
             this.curlyFrequency = this.getUniform('curlyFrequency');
             this.curlyAmplitude = this.getUniform('curlyAmplitude');
+
             this.hairColor = this.getUniform('hairColor');
+
+            this.textureFactor = this.getUniform('textureFactor');
+
 
         
 

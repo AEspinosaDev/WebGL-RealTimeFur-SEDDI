@@ -50,7 +50,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '       float newAngle;\r\n' +
 
                 '       vec3 auxCombedNormal = rotate(normalize(rm_C_Normal),combWorldDir3D.xyz,combAngle);\r\n' +
-                '       if(currentAngle<0.5) {\r\n' + //If angles is higher than 45, stop rotating unless is to the opposite side
+                '       if(currentAngle<0.5) {\r\n' + //If angle is higher than 45, stop rotating unless is to the opposite side
                 '           newAngle = dot(auxCombedNormal,rm_Normal);\r\n' +
                 '           if(newAngle<currentAngle) return;\r\n' +
                 '       } \r\n' +

@@ -187,7 +187,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
 
                 }
 
-
+                root.finVertexDataLength = finVertices.length*4;
                 // console.log(finIndices);
 
                 //BIND FIN BUFFERS
@@ -199,10 +199,14 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 root.finBufferPos = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, root.finBufferPos);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finVertices), gl.STATIC_DRAW);
-                // console.log(finVertices);
+                root.numFinVertices = finVertices.length/3;
 
                 root.finBufferNormals = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, root.finBufferNormals);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finNormals), gl.STATIC_DRAW);
+
+                root.finBufferCombedNormals = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, root.finBufferCombedNormals);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(finNormals), gl.STATIC_DRAW);
 
                 root.finBufferTangents = gl.createBuffer();
@@ -260,6 +264,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             JsonDataLoader.load(url,
                 function (data) {
                     root.numVertices = data.meshes[0].vertices.length/3;
+                    root.shellVertexDataLength = data.meshes[0].vertices.length*4;
 
                     root.bufferStrides = gl.createBuffer();
                     gl.bindBuffer(gl.ARRAY_BUFFER, root.bufferStrides);
@@ -340,6 +345,10 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             gl.enableVertexAttribArray(shader.rm_Normal);
             gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferCombedNormals);
+            gl.enableVertexAttribArray(shader.rm_C_Normal);
+            gl.vertexAttribPointer(shader.rm_C_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+
             gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferTangents);
             gl.enableVertexAttribArray(shader.rm_Tangent);
             gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
@@ -354,26 +363,29 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
 
 
         },
-        bindTransformFeedbackBuffers: function (shader) {
+        bindTransformFeedbackBuffers: function (shader,type) {
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.TFOutput);
+            type==true ? gl.bufferData(gl.ARRAY_BUFFER, this.shellVertexDataLength, gl.STATIC_DRAW):gl.bufferData(gl.ARRAY_BUFFER, this.finVertexDataLength, gl.STATIC_DRAW);
+
+            type==true  ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferPos);
             gl.enableVertexAttribArray(shader.rm_Vertex);
             gl.vertexAttribPointer(shader.rm_Vertex, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferNormals);
+            
+            type==true  ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferNormals) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferNormals);
             gl.enableVertexAttribArray(shader.rm_Normal);
             gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferCombNormals);
+            
+            type==true  ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferCombNormals) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferCombedNormals);
             gl.enableVertexAttribArray(shader.rm_C_Normal);
             gl.vertexAttribPointer(shader.rm_C_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTangents);
+            
+            type==true  ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTangents) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferTangents);
             gl.enableVertexAttribArray(shader.rm_Tangent);
             gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 
-
         },
+       
 
         /**
          * Returns number of inices in model

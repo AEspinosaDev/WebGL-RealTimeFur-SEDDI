@@ -91,8 +91,11 @@ define([
                 renderer.curlyAmplitude = renderer.curlyness * renderer.CURLY_AMP_STEP + renderer.CURLY_AMP_OFFSET;
             });
 
-            $('#sliderPitchRot').on('change', function (e) {
-                renderer.anglePitch = e.value.newValue;
+            $('#sliderShellTexture').on('change', function (e) {
+                renderer.shellTextureSize = e.value.newValue;
+            });
+            $('#sliderFinTexture').on('change', function (e) {
+                renderer.finTextureSize = e.value.newValue;
             });
             $('#sliderLightPosX').on('change', function (e) {
                 renderer.lightPos[1] = e.value.newValue;
@@ -237,7 +240,8 @@ define([
                 $('#sliderhairLength').slider('setValue', renderer.hairLength);
                 $('#sliderDensity').slider('setValue', renderer.textureDensity);
                 $('#sliderCurlyness').slider('setValue', renderer.curlyness);
-                $('#sliderPitchRot').slider('setValue', renderer.anglePitch);
+                $('#sliderShellTexture').slider('setValue',  renderer.shellTextureSize);
+                $('#sliderFinTexture').slider('setValue',  renderer.finTextureSize);
                 $('#sliderLightPosX').slider('setValue', renderer.lightPos[1]);
                 $('#sliderLightPosY').slider('setValue', renderer.lightPos[2]);
                 $('#sliderLightIntensity').slider('setValue', renderer.lightIntensity);

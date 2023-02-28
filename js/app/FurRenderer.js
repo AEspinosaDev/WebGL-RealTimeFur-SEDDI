@@ -190,6 +190,7 @@ define([
                 var boundUpdateCallback = this.updateLoadedObjectsCount.bind(this);
 
                 this.modelCube = new FullModel(true);
+
                 //this.modelCube.load('data/models/box10_rounded', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
@@ -205,7 +206,6 @@ define([
 
                 this.currentPreset = Object.assign({}, FurPresets.current());
 
-                // this.textureFurDiffuse = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('diffuseTexture'), boundUpdateCallback);
                 this.textureFurAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('alphaTexture'), boundUpdateCallback);
                 this.textureFurTipAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('tipAlphaTexture'), boundUpdateCallback);
                 this.textureFinAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('finAlphaTexture'), boundUpdateCallback);
@@ -215,10 +215,8 @@ define([
                 this.vignette.initGL(gl);
 
 
-                // this.createFBO(); 
 
             }
-
 
 
             getCurrentPresetParameter(param) {
@@ -230,14 +228,16 @@ define([
             }
 
             loadNextFurTextures(callback) {
-                this.textureFurDiffuseNext && gl.deleteTexture(this.textureFurDiffuseNext);
+                this.textureFinAlphaNext && gl.deleteTexture(this.textureFinAlphaNext);
                 this.textureFurAlphaNext && gl.deleteTexture(this.textureFurAlphaNext);
+                this.textureFurTipAlphaNext && gl.deleteTexture(this.textureFurTipAlphaNext);
 
-                this.textureFurDiffuseNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('diffuseTexture'), callback);
+
                 this.textureFurAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('alphaTexture'), callback);
-                this.textureFurAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('tipAlphaTexture'), callback);
+                this.textureFurTipAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('tipAlphaTexture'), callback);
+                this.textureFinAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('finAlphaTexture'), callback);
             }
-
+            //#region getters and setters
             get layers() {
                 return this.currentPreset['layers'];
             }
@@ -272,6 +272,24 @@ define([
             get specularPower() {
                 return this.currentPreset['specularPower'];
             }
+            set shellTextureSize(value) {
+                this.currentPreset['shellTextureSize'] = value;
+            }
+
+
+            get shellTextureSize() {
+                return this.currentPreset['shellTextureSize'];
+            }
+
+            set finTextureSize(value) {
+                this.currentPreset['finTextureSize'] = value;
+            }
+
+
+            get finTextureSize() {
+                return this.currentPreset['finTextureSize'];
+            }
+            //#endregion
 
             loadPreset(preset) {
                 var root = this,
@@ -282,7 +300,7 @@ define([
 
                 root.loadNextFurTextures(function () {
                     counter++;
-                    if (counter == 2) {
+                    if (counter == 3) {
                         root.loadingNextFur = false;
                     }
                 });
@@ -348,14 +366,17 @@ define([
 
 
                 if (!this.loadingNextFur) {
-                    if (this.textureFurDiffuseNext && this.textureFurAlphaNext) {
+                    if (this.textureFinAlphaNext && this.textureFurTipAlphaNext && this.textureFurAlphaNext) {
                         this.currentPreset = Object.assign({}, FurPresets.current());
                         this.onPresetLoaded && this.onPresetLoaded();
-                        gl.deleteTexture(this.textureFurDiffuse);
+                        gl.deleteTexture(this.textureFurTipAlpha);
                         gl.deleteTexture(this.textureFurAlpha);
-                        this.textureFurDiffuse = this.textureFurDiffuseNext;
+                        // gl.deleteTexture(this.textureFinAlphaNext);
+                        this.textureFinAlpha = this.textureFinAlphaNext;
+                        this.textureFurTipAlpha = this.textureFurTipAlphaNext;
                         this.textureFurAlpha = this.textureFurAlphaNext;
-                        this.textureFurDiffuseNext = null;
+                        this.textureFinAlphaNext = null;
+                        this.textureFurTipAlphaNext = null;
                         this.textureFurAlphaNext = null;
                     }
                 }
@@ -524,7 +545,7 @@ define([
                 gl.uniform4f(shader.colorStart, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
                 gl.uniform4f(shader.colorEnd, preset.endColor[0], preset.endColor[1], preset.endColor[2], preset.endColor[3]);
                 gl.uniform1f(shader.time, this.furTimer);
-                // gl.uniform1f(shader.waveScale, scale);
+
                 gl.uniform1f(shader.stiffness, this.FUR_STIFFNESS);
                 gl.uniform3f(shader.lightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
                 gl.uniform3f(shader.lightColor, this.lightColor[0], this.lightColor[1], this.lightColor[2]);
@@ -541,6 +562,8 @@ define([
 
                 gl.uniform1f(shader.curlyFrequency, this.curlyFrequency);
                 gl.uniform1f(shader.curlyAmplitude, this.curlyAmplitude);
+
+                gl.uniform1f(shader.textureFactor, preset.shellTextureSize);
 
 
                 gl.drawElementsInstanced(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0, preset.layers);
@@ -560,7 +583,6 @@ define([
                 gl.uniform4f(shader.colorEnd, preset.endColor[0], preset.endColor[1], preset.endColor[2], preset.endColor[3]);
                 gl.uniform1f(shader.hairLength, preset.hairLength);
                 gl.uniform1f(shader.layersCount, preset.layers);
-                gl.uniform3f(shader.eyePos, this.mVMatrix[12], this.mVMatrix[13], this.mVMatrix[14]);
                 gl.uniform3f(shader.lightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
                 gl.uniform3f(shader.lightColor, this.lightColor[0], this.lightColor[1], this.lightColor[2]);
                 gl.uniform1f(shader.lightIntensity, this.lightIntensity);
@@ -576,6 +598,8 @@ define([
 
                 gl.uniform1i(shader.finOpacity, this.finOpacity);
 
+                gl.uniform1f(shader.textureFactor, preset.finTextureSize);
+
                 gl.drawElements(gl.TRIANGLES, model.numFinIndices, gl.UNSIGNED_SHORT, 0);
 
             }
@@ -586,7 +610,9 @@ define([
                 gl.uniform1f(computeShader.combAngle, this.combAngle);
                 gl.uniformMatrix4fv(computeShader.view_model_matrix, false, this.mMVMatrix);
 
-                model.bindTransformFeedbackBuffers(computeShader);
+                //Compute shell normals
+
+                model.bindTransformFeedbackBuffers(computeShader, true);
 
                 gl.enable(gl.RASTERIZER_DISCARD);
 
@@ -600,14 +626,41 @@ define([
 
                 //save it in normal buffer
                 gl.bindBuffer(gl.ARRAY_BUFFER, model.TFOutput);
-                const modifiedNormals = new Float32Array(model.numVertices * 3);
+                const shellModifiedNormals = new Float32Array(model.numVertices * 3);
                 gl.getBufferSubData(
                     gl.ARRAY_BUFFER,
                     0,    // byte offset into GPU buffer,
-                    modifiedNormals,
+                    shellModifiedNormals,
                 );
                 gl.bindBuffer(gl.ARRAY_BUFFER, model.bufferCombNormals);
-                gl.bufferData(gl.ARRAY_BUFFER, modifiedNormals, gl.STATIC_DRAW);
+                gl.bufferData(gl.ARRAY_BUFFER, shellModifiedNormals, gl.STATIC_DRAW);
+
+                //Compute fin normals
+
+                model.bindTransformFeedbackBuffers(computeShader,false);
+                
+                gl.enable(gl.RASTERIZER_DISCARD);
+
+                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, model.transformFeedback);
+                gl.beginTransformFeedback(gl.POINTS);
+                gl.drawArrays(gl.POINTS, 0, model.numFinVertices);
+                gl.endTransformFeedback();
+                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+
+                gl.disable(gl.RASTERIZER_DISCARD);
+
+                //save it in normal buffer
+                gl.bindBuffer(gl.ARRAY_BUFFER, model.TFOutput);
+                const finModifiedNormals = new Float32Array(model.numFinVertices * 3);
+                gl.getBufferSubData(
+                    gl.ARRAY_BUFFER,
+                    0,    // byte offset into GPU buffer,
+                    finModifiedNormals,
+                );
+                gl.bindBuffer(gl.ARRAY_BUFFER, model.finBufferCombedNormals);
+                gl.bufferData(gl.ARRAY_BUFFER, finModifiedNormals, gl.STATIC_DRAW);
+
+
 
             }
 
