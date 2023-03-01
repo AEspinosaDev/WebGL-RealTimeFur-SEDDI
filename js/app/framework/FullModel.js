@@ -329,6 +329,11 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 gl.enableVertexAttribArray(shader.rm_C_Normal);
                 gl.vertexAttribPointer(shader.rm_C_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
             }
+            if (shader.rm_Tangent) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTangents);
+                gl.enableVertexAttribArray(shader.rm_Tangent);
+                gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+            }
 
 
          
@@ -349,9 +354,9 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             gl.enableVertexAttribArray(shader.rm_C_Normal);
             gl.vertexAttribPointer(shader.rm_C_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferTangents);
-            gl.enableVertexAttribArray(shader.rm_Tangent);
-            gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+            // gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferTangents);
+            // gl.enableVertexAttribArray(shader.rm_Tangent);
+            // gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.finUVs);
             gl.enableVertexAttribArray(shader.rm_TexCoord0);
@@ -366,21 +371,21 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
         bindTransformFeedbackBuffers: function (shader,type) {
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.TFOutput);
-            type==true ? gl.bufferData(gl.ARRAY_BUFFER, this.shellVertexDataLength, gl.STATIC_DRAW):gl.bufferData(gl.ARRAY_BUFFER, this.finVertexDataLength, gl.STATIC_DRAW);
+            type? gl.bufferData(gl.ARRAY_BUFFER, this.shellVertexDataLength, gl.STATIC_DRAW):gl.bufferData(gl.ARRAY_BUFFER, this.finVertexDataLength, gl.STATIC_DRAW);
 
-            type==true  ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferPos);
+            type  ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferStrides) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferPos);
             gl.enableVertexAttribArray(shader.rm_Vertex);
             gl.vertexAttribPointer(shader.rm_Vertex, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
             
-            type==true  ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferNormals) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferNormals);
+            type ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferNormals) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferNormals);
             gl.enableVertexAttribArray(shader.rm_Normal);
             gl.vertexAttribPointer(shader.rm_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
             
-            type==true  ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferCombNormals) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferCombedNormals);
+            type ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferCombNormals) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferCombedNormals);
             gl.enableVertexAttribArray(shader.rm_C_Normal);
             gl.vertexAttribPointer(shader.rm_C_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
             
-            type==true  ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTangents) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferTangents);
+            type ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTangents) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferTangents);
             gl.enableVertexAttribArray(shader.rm_Tangent);
             gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 

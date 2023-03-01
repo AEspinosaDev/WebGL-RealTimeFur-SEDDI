@@ -205,13 +205,23 @@ define([
                     var dy = speed * (y - renderer.mouseLastPosition[1]);
 
 
-                    renderer.combAngle = 0.75*Math.sqrt(dx * dx + dy * dy);
-
-
+                    renderer.combAngle = 0.75 * Math.sqrt(dx * dx + dy * dy);
                     renderer.combViewDirection2D = [dx, dy];
+
                     // console.log(renderer.combViewDirection2D);
                     renderer.mouseLastPosition[0] = x;
                     renderer.mouseLastPosition[1] = y;
+
+                    //Normalize device coordinates CLIP position
+                    const canvas = gl.canvas;
+                    const rect = canvas.getBoundingClientRect();
+                    const aux_x = x - rect.left;
+                    const aux_y = y - rect.top;
+                    renderer.mouseNDCPosition[0] = aux_x / rect.width * 2 - 1;
+                    renderer.mouseNDCPosition[1] = aux_y / rect.height * -2 + 1;
+
+                    renderer.combNDCRadius = renderer.combRadius / (rect.width * 0.5);
+
 
 
                 }
@@ -221,12 +231,16 @@ define([
                     var dx = speed * (x - renderer.mouseResizeLastPosition[0]);
                     var dy = speed * (y - renderer.mouseResizeLastPosition[1]);
 
+                    renderer.mouseResizeLastPosition[0] = x;
+                    renderer.mouseResizeLastPosition[1] = y;
                     if (renderer.combRadius >= 0) {
                         renderer.combRadius += (dx + dy) * 0.5;
                         if (renderer.combRadius < 0) { renderer.combRadius = 0; }
                     }
-                    renderer.mouseResizeLastPosition[0] = x;
-                    renderer.mouseResizeLastPosition[1] = y;
+
+
+
+
 
                 }
             });
@@ -240,8 +254,8 @@ define([
                 $('#sliderhairLength').slider('setValue', renderer.hairLength);
                 $('#sliderDensity').slider('setValue', renderer.textureDensity);
                 $('#sliderCurlyness').slider('setValue', renderer.curlyness);
-                $('#sliderShellTexture').slider('setValue',  renderer.shellTextureSize);
-                $('#sliderFinTexture').slider('setValue',  renderer.finTextureSize);
+                $('#sliderShellTexture').slider('setValue', renderer.shellTextureSize);
+                $('#sliderFinTexture').slider('setValue', renderer.finTextureSize);
                 $('#sliderLightPosX').slider('setValue', renderer.lightPos[1]);
                 $('#sliderLightPosY').slider('setValue', renderer.lightPos[2]);
                 $('#sliderLightIntensity').slider('setValue', renderer.lightIntensity);

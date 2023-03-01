@@ -21,7 +21,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform float curlyFrequency;\n' +
                 'uniform float curlyAmplitude;\n' +
 
-               
+
                 '\r\n' +
 
                 'in vec4 rm_Vertex;\r\n' +
@@ -39,20 +39,44 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'out vec3 lightViewPos;\n' +
                 'out float textureOffset;\r\n' +
 
+                
+                // 'mat4 rotationMatrix(vec3 axis, float angle) {\n' +
+                // '   axis = normalize(axis);\n' +
+                // '    float s = sin(angle);\n' +
+                // '    float c = cos(angle);\n' +
+                // '     float oc = 1.0 - c;\n' +
+
+                // '    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,\n' +
+                // '                 oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,\n' +
+                // '                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,\n' +
+                // '                0.0,                                0.0,                                0.0,                                1.0);\n' +
+                // ' }\n' +
+
+                // ' vec3 rotate(vec3 v, vec3 axis, float angle) {\n' +
+                // '     mat4 m = rotationMatrix(axis, angle);\n' +
+                // '     return (m * vec4(v, 1.0)).xyz;\n' +
+                // ' }\n' +
+
                 'void main( void )\r\n' +
                 '{\r\n' +
                 '    float f = float(gl_InstanceID+1) * shellOffset;\r\n' +
 
                 '    float layerCoeff = float(gl_InstanceID) / layersCount;\r\n' +
             
+                // '    float offset = sin(layerCoeff*3.0)/3.0;\n' +
+
+                // '    vec3 tangentRandDirection = rotate(rm_Tangent,rm_Normal,0.4);\r\n' +
+
                 '    vec4 vertex = rm_Vertex + vec4(rm_C_Normal, 0.0) * vec4(f, f, f, 0.0);\r\n' +
+
+                // '    vertex += vec4(tangentRandDirection,0.0)*vec4(offset, offset, offset, 0.0);\r\n' +
 
                 '    gl_Position = view_proj_matrix * vertex;\r\n' +
 
                 '    vTexCoord0 = vec2(rm_TexCoord0);\r\n' +
 
                 '    vAO = mix(colorStart, colorEnd, layerCoeff);\r\n' +
-                
+
                 '    curlynessCoeff = mix(0.0, 1.0, layerCoeff);\r\n' +
 
                 '   hairNormal = mat3(transpose(inverse(view_model_matrix))) * rm_C_Normal;\n' +
@@ -60,7 +84,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '    lightViewPos = (view_matrix * vec4(lightPos,1.0)).xyz;\n' +
 
                 '    vPos =  (view_model_matrix * vertex).xyz;\n' +
-                // '    textureOffset = sin(layerCoeff*0.75)/100.0;\n' +
+
                 '}'
 
 
@@ -107,7 +131,6 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '\r\n' +
                 'void main()\r\n' +
                 '{\r\n' +
-                // '   vec2 outTextCoord = vec2(vTexCoord0.x+textureOffset,vTexCoord0.y+textureOffset);\n' +
                 '   Ka = hairColor;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
@@ -117,6 +140,7 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 '   fragColor.a *= alphaColor;\r\n' +
                 '}\n' +
+                //#region 
                 'vec4 computePointLight() {\n' +
                 '  vec3 lightDir = normalize(lightViewPos-vPos);\n' +
                 '  vec3 viewDir = normalize(-vPos);\n' +
@@ -136,7 +160,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 //Result
                 '  return vec4((ambient+diffuse+specular),1.0)*intensity;\n' +
                 '}\n' +
-
+                //#endregion
 
                 //Kayijas method
                 'vec4 computeHairLighting() {\n' +
@@ -161,7 +185,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'vec2 rotateUV(vec2 uv, float rotation) {\n' +
                 ' float mid = 0.5;\n' +
                 '  return vec2(\n' +
-                ' cos(rotation) * (uv.x - mid) + sin(rotation) * (uv.y - mid) + mid,\n' +
+                '  cos(rotation) * (uv.x - mid) + sin(rotation) * (uv.y - mid) + mid,\n' +
                 '  cos(rotation) * (uv.y - mid) - sin(rotation) * (uv.x - mid) + mid\n' +
                 '  );\n' +
                 '}'
@@ -177,7 +201,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             // this.rm_Normal = this.getAttrib('rm_Normal');
             this.rm_C_Normal = this.getAttrib('rm_C_Normal');
             this.rm_Tangent = this.getAttrib('rm_Tangent');
-            
+
             this.diffuseMap = this.getUniform('diffuseMap');
             this.alphaMap = this.getUniform('alphaMap');
             this.alphaMapTip = this.getUniform('alphaMapTip');
@@ -205,7 +229,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.textureFactor = this.getUniform('textureFactor');
 
 
-        
+
 
         }
     }

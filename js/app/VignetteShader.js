@@ -35,9 +35,20 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  if(isPostProcess==1){\n' +
                 '       float distanceX = abs(gl_FragCoord.x - mousePos.x);\n' +
                 '       float distanceY = abs(gl_FragCoord.y - mousePos.y);\n' +
-               
-                '       if(sqrt(distanceX*distanceX + distanceY * distanceY) <= mouseRadio )\n' +
-                '           outColor = mix(vec4(0.0,1.0,0.1,1.0),outColor,0.75);\n' +
+                '       float composeDistance = sqrt(distanceX*distanceX + distanceY * distanceY);\n' +
+
+                '       float distanceToBorder = mouseRadio-composeDistance;\r\n' +
+                '       float att;\r\n' +
+                '       float brushEdge = mouseRadio*0.25;\r\n' +
+
+                '       distanceToBorder<=brushEdge ? att= distanceToBorder/brushEdge : att=1.0;\r\n' +
+
+                //Circle brush
+                '       if(composeDistance <= mouseRadio )\n' +
+                '           outColor = mix(outColor,vec4(0.0,1.0,0.1,1.0),0.5*att);\n' +
+                //Brush edge
+                '       if(composeDistance <= mouseRadio && composeDistance >= mouseRadio-1.0)\n' +
+                '           outColor = mix(vec4(0.0,0.0,0.1,1.0),outColor,0.5);\n' +
                 '}\n' +
 
                 '  gl_FragColor = outColor;\n' +

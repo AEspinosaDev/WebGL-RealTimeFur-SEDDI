@@ -5,7 +5,7 @@ define([
     'jquery',
     'ShellShader',
     'ShadowMapShader',
-    'ComputeShellNormalShader',
+    'ComputeCombNormalShader',
     'FinShader',
     'VignetteShader',
     'DiffuseColoredShader',
@@ -21,7 +21,7 @@ define([
         $,
         ShellShader,
         ShadowMapShader,
-        ComputeShellNormalShader,
+        ComputeCombNormalShader,
         FinShader,
         VignetteShader,
         DiffuseColoredShader,
@@ -82,9 +82,11 @@ define([
                 this.settingsToggle = false;
                 this.mouseLastPosition = [-1, -1];
                 this.mouseResizeLastPosition = [0, 0];
+                this.mouseNDCPosition = [0, 0];
                 this.dragAngles = [0, 0];
                 this.rotationFactor = 10;
                 this.combRadius = 50;
+                this.combNDCRadius = 0;
 
                 this.combAngle = 0;
                 this.combViewDirection2D = [0, 0];
@@ -93,7 +95,7 @@ define([
                 // this.outMousePosition =[0,0];
 
                 //Light
-                this.lightPos = [1000.0, 1000.0, 1000.0]; //point light //z,x,y because up is the last coord
+                this.lightPos = [100.0, 100.0, 100.0]; //point light //z,x,y because up is the last coord
                 this.lightColor = [1.0, 0.98, 0.92];
                 this.lightIntensity = 1.0;
                 this.shadowsEnabled = true;
@@ -156,7 +158,7 @@ define([
                 this.diffuseColoredShader = new DiffuseColoredShader();
                 this.shaderShell = new ShellShader();
                 this.shaderFin = new FinShader();
-                this.computeShader = new ComputeShellNormalShader(['combedNormal'])
+                this.computeShader = new ComputeCombNormalShader(['combedNormal'])
             }
 
             /**
@@ -606,9 +608,26 @@ define([
             computeCombedNormals(computeShader, model) {
                 computeShader.use();
 
-                gl.uniform3f(computeShader.combViewDir3D, 0, this.combViewDirection2D[0], this.combViewDirection2D[1]);
                 gl.uniform1f(computeShader.combAngle, this.combAngle);
                 gl.uniformMatrix4fv(computeShader.view_model_matrix, false, this.mMVMatrix);
+                gl.uniformMatrix4fv(computeShader.view_proj_matrix, false, this.mMVPMatrix);
+                
+                // //Mouse clip position
+                // var mouseWorldPoss = MatrixUtils.vec3.create();
+                // MatrixUtils.vec3.set(mouseWorldPoss, this.mouseClipPosition[0]
+                //     , this.mouseClipPosition[1]
+                //     , 0);
+                // var inverseMVP = MatrixUtils.mat4.create();
+                // MatrixUtils.mat4.invert(inverseMVP, this.mMVPMatrix);
+                // MatrixUtils.vec3.transformMat4(mouseWorldPoss, mouseWorldPoss, inverseMVP);
+                // gl.uniform3f(computeShader.mousePos, mouseWorldPoss[0],mouseWorldPoss[1], mouseWorldPoss[2]);
+                
+                gl.uniform3f(computeShader.mousePos, this.mouseNDCPosition[0], this.mouseNDCPosition[1],0);
+                //Bursh radio
+                gl.uniform1f(computeShader.mouseRadio, this.combNDCRadius);
+                
+                gl.uniform3f(computeShader.combViewDir3D, this.combViewDirection2D[0], this.combViewDirection2D[1], 0);
+
 
                 //Compute shell normals
 
@@ -637,8 +656,8 @@ define([
 
                 //Compute fin normals
 
-                model.bindTransformFeedbackBuffers(computeShader,false);
-                
+                model.bindTransformFeedbackBuffers(computeShader, false);
+
                 gl.enable(gl.RASTERIZER_DISCARD);
 
                 gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, model.transformFeedback);

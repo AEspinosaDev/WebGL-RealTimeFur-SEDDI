@@ -18,7 +18,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec2 rm_TexCoord0;\n' +
                 'in vec3 rm_Normal;\n' +
                 'in vec3 rm_C_Normal;\n' +
-                'in vec3 rm_Tangent;\n' +
+                // 'in vec3 rm_Tangent;\n' +
                 'in float rm_Extrudable;\n' +
 
                 'uniform int numOfVertices;\n' +
@@ -30,6 +30,7 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 'out vec2 vTextureCoord;\n' +
                 'out vec3 finNormal;\n' +
+                'out vec3 hairDirection;\n' +
                 'out vec3 vPos;\n' +
                 'out vec3 lightViewPos;\n' +
                 'out vec4 vAO;\r\n' +
@@ -52,7 +53,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 // ' vec3 t = mat3(transpose(inverse(view_model_matrix))) * rm_Tangent;\n' +
                 // '  finNormal = cross(n,t);\n' +
                 '  lightViewPos = (view_matrix * vec4(lightPos,1.0)).xyz;\n' +
-                '  finNormal = mat3(transpose(inverse(view_model_matrix))) * rm_C_Normal;\n' +
+                '  finNormal = mat3(transpose(inverse(view_model_matrix))) * rm_Normal;\n' +
+                '  hairDirection = mat3(transpose(inverse(view_model_matrix))) * rm_C_Normal;\n' +
                 '  vPos =  (view_model_matrix * vertex).xyz;\n' +
                 '  vAO = mix(colorStart, colorEnd, rm_Extrudable);\r\n' +
                 '}';
@@ -61,6 +63,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'precision mediump float;\n' +
                 'in vec2 vTextureCoord;\n' +
                 'in vec3 finNormal;\n' +
+                'in vec3 hairDirection;\n' +
                 'in vec3 vPos;\n' +
                 'in vec3 viewPos;\n' +
                 'in vec4 vAO;\n' +
@@ -152,7 +155,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  vec3 L = normalize(lightViewPos-vPos);\n' + //LightDir
                 '  vec3 V = normalize(-vPos);\n' + //ViewDir
                 '  vec3 H = normalize(L-V);\n' + //Halfway
-                '  vec3 N = normalize(finNormal);\n' + //Normal
+                '  vec3 N = normalize(hairDirection);\n' + //Normal
                 '  vec3 T = N;\n' + //Hair direction :C
                 
                 '  float u =dot(T,L);\n' + //Lambertian
@@ -180,7 +183,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.rm_Extrudable = this.getAttrib('rm_Extrudable');
             this.rm_Normal = this.getAttrib('rm_Normal');
             this.rm_C_Normal = this.getAttrib('rm_C_Normal');
-            this.rm_Tangent = this.getAttrib('rm_Tangent');
+            // this.rm_Tangent = this.getAttrib('rm_Tangent');
             this.numOfVertices = this.getUniform('numOfVertices');
             this.hairLength = this.getUniform('hairLength');
             this.layersCount = this.getUniform('layersCount');

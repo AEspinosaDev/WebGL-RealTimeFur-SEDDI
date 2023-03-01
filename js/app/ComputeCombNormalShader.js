@@ -6,7 +6,7 @@ define(['framework/BaseShader'], function (BaseShader) {
      * Simple diffuse texture shader.
      * @class
      */
-    class ComputeShellNormalShader extends BaseShader {
+    class ComputeCombNormalShader extends BaseShader {
         fillCode() {
             this.vertexShaderCode = '#version 300 es\r\n' +
                 'uniform mat4 view_proj_matrix;\n' +
@@ -18,6 +18,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform mat4 view_model_matrix;\r\n' +
                 'uniform vec3 combViewDir3D;\n' +
                 'uniform float combAngle;\n' +
+                'uniform vec3 mouseNDCPos;\n' +
+                'uniform float mouseNDCRadio;\n' +
 
                 'out vec3 combedNormal;\n' +
 
@@ -40,16 +42,33 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 '\n' +
                 'void main() {\n' +
+
+                //Vertex pos to NDC coord to match mouse coordinates
+                '    vec4 vertexNDCpos = view_proj_matrix*vec4(rm_Vertex.xyz,1.0);\r\n' +
+                '    vertexNDCpos /= vertexNDCpos.w;\r\n' +
+                '    float distanceToVertex = distance(mouseNDCPos.xy,vertexNDCpos.xy);\r\n' +
+
+                //If inside brush area
+                '    if(distanceToVertex<=mouseNDCRadio){\r\n' +
+
                 '    combedNormal = rm_C_Normal;\r\n' +
                 '    vec3 viewNormal = normalize(mat3(transpose(inverse(view_model_matrix))) * rm_Normal);\r\n' +
                 '    vec3 viewVertex =  normalize((view_model_matrix * rm_Vertex).xyz);\r\n' +
 
+
                 '    if(dot(-viewVertex,viewNormal)>0.6 && combAngle !=0.0){\r\n' + //If there is input movement and hair is more or less facing the camera
-                '       vec4 combWorldDir3D = vec4(normalize(combViewDir3D),1.0)*inverse(view_model_matrix);\r\n' +
+
+                '       vec4 combWorldDir3D = inverse(view_proj_matrix)*vec4(normalize(combViewDir3D.xyz),1.0);\r\n' +
                 '       float currentAngle = dot(rm_C_Normal,rm_Normal);\r\n' +
                 '       float newAngle;\r\n' +
 
-                '       vec3 auxCombedNormal = rotate(normalize(rm_C_Normal),combWorldDir3D.xyz,combAngle);\r\n' +
+                '       float distanceToBorder = mouseNDCRadio-distanceToVertex;\r\n' +
+                '       float att;\r\n' +
+                '       float brushEdge = mouseNDCRadio*0.25;\r\n' +
+
+                '       distanceToBorder<=brushEdge ? att= distanceToBorder/brushEdge : att=1.0;\r\n' +
+
+                '       vec3 auxCombedNormal = rotate(normalize(rm_C_Normal),combWorldDir3D.xyz,combAngle*att);\r\n' +
                 '       if(currentAngle<0.5) {\r\n' + //If angle is higher than 45, stop rotating unless is to the opposite side
                 '           newAngle = dot(auxCombedNormal,rm_Normal);\r\n' +
                 '           if(newAngle<currentAngle) return;\r\n' +
@@ -57,6 +76,8 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 '      combedNormal = auxCombedNormal;\r\n' +
                 '       }\r\n' +
+
+                '    }else {combedNormal = rm_C_Normal;}\r\n' +
 
                 '}';
 
@@ -71,8 +92,9 @@ define(['framework/BaseShader'], function (BaseShader) {
 
         fillUniformsAttributes() {
             this.view_model_matrix = this.getUniform('view_model_matrix');
-            this.mousePos = this.getUniform('mousePos');
-            this.mouseRadio = this.getUniform('mouseRadio');
+            this.view_proj_matrix = this.getUniform('view_proj_matrix');
+            this.mousePos = this.getUniform('mouseNDCPos');
+            this.mouseRadio = this.getUniform('mouseNDCRadio');
             this.combViewDir3D = this.getUniform('combViewDir3D');
             this.combAngle = this.getUniform('combAngle');
 
@@ -87,5 +109,5 @@ define(['framework/BaseShader'], function (BaseShader) {
         }
     }
 
-    return ComputeShellNormalShader;
+    return ComputeCombNormalShader;
 });
