@@ -200,7 +200,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.rm_TexCoord0 = this.getAttrib('rm_TexCoord0');
             // this.rm_Normal = this.getAttrib('rm_Normal');
             this.rm_C_Normal = this.getAttrib('rm_C_Normal');
-            this.rm_Tangent = this.getAttrib('rm_Tangent');
+            // this.rm_Tangent = this.getAttrib('rm_Tangent');
 
             this.diffuseMap = this.getUniform('diffuseMap');
             this.alphaMap = this.getUniform('alphaMap');

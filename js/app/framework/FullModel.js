@@ -48,6 +48,9 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
         this.bufferStrides = null;
         this.numIndices = 0;
         this.transformFeedback = transformFeedback;
+
+        this.position = [0,0,0];
+        this.size = [1,1,1];
     }
 
     FullModel.prototype = {

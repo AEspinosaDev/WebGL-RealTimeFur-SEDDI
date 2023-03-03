@@ -78,12 +78,12 @@ define([
         BaseRenderer.prototype.calculateMVPMatrix = function(tx, ty, tz, rx, ry, rz, sx, sy, sz) {
             MatrixUtils.mat4.identity(this.mMMatrix);
             MatrixUtils.mat4.rotate(this.mMMatrix, this.mMMatrix, 0, [1, 0, 0]);
-            MatrixUtils.mat4.translate(this.mMMatrix, this.mMMatrix, [tx, ty, tz]);
             MatrixUtils.mat4.scale(this.mMMatrix, this.mMMatrix, [sx, sy, sz]);
             MatrixUtils.mat4.scale(this.mMMatrix, this.mMMatrix, [this.size, this.size, this.size]);
             MatrixUtils.mat4.rotateX(this.mMMatrix, this.mMMatrix, rx);
             MatrixUtils.mat4.rotateY(this.mMMatrix, this.mMMatrix, ry);
             MatrixUtils.mat4.rotateZ(this.mMMatrix, this.mMMatrix, rz);
+            MatrixUtils.mat4.translate(this.mMMatrix, this.mMMatrix, [tx, ty, tz]);
             MatrixUtils.mat4.multiply(this.mMVMatrix, this.mVMatrix, this.mMMatrix);
             MatrixUtils.mat4.multiply(this.mMVPMatrix, this.mProjMatrix, this.mMVMatrix);
         }

@@ -16,7 +16,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec3 rm_Tangent;\n' +
 
                 'uniform mat4 view_model_matrix;\r\n' +
-                'uniform vec3 combViewDir3D;\n' +
+                'uniform vec3 combNDCdir;\n' +
                 'uniform float combAngle;\n' +
                 'uniform vec3 mouseNDCPos;\n' +
                 'uniform float mouseNDCRadio;\n' +
@@ -47,40 +47,50 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '    vec4 vertexNDCpos = view_proj_matrix*vec4(rm_Vertex.xyz,1.0);\r\n' +
                 '    vertexNDCpos /= vertexNDCpos.w;\r\n' +
                 '    float distanceToVertex = distance(mouseNDCPos.xy,vertexNDCpos.xy);\r\n' +
-
+                
+                
                 //If inside brush area
                 '    if(distanceToVertex<=mouseNDCRadio){\r\n' +
-
+                
                 '    combedNormal = rm_C_Normal;\r\n' +
                 '    vec3 viewNormal = normalize(mat3(transpose(inverse(view_model_matrix))) * rm_Normal);\r\n' +
                 '    vec3 viewVertex =  normalize((view_model_matrix * rm_Vertex).xyz);\r\n' +
-
-
-                '    if(dot(-viewVertex,viewNormal)>0.6 && combAngle !=0.0){\r\n' + //If there is input movement and hair is more or less facing the camera
-
-                '       vec4 combWorldDir3D = inverse(view_proj_matrix)*vec4(normalize(combViewDir3D.xyz),1.0);\r\n' +
+                '    float normalViewAngle =  dot(-viewVertex,viewNormal);\r\n' +
+                
+                
+                '    if(normalViewAngle>0.6 && combAngle !=0.0){\r\n' + //If there is input movement and hair is more or less facing the camera
+                
+                // '       vec4 combWorldDir3D = inverse(view_proj_matrix)*vec4(normalize(combNDCdir.xyz),1.0);\r\n' +
+                '       vec3 combWorldDir3D =  normalize(mat3(transpose(view_model_matrix))*normalize(combNDCdir));\r\n' +
+                // '       combWorldDir3D.xyz /= combWorldDir3D.w;\r\n' +
+                
                 '       float currentAngle = dot(rm_C_Normal,rm_Normal);\r\n' +
                 '       float newAngle;\r\n' +
 
+                //Attenuation calculations
                 '       float distanceToBorder = mouseNDCRadio-distanceToVertex;\r\n' +
                 '       float att;\r\n' +
                 '       float brushEdge = mouseNDCRadio*0.25;\r\n' +
-
                 '       distanceToBorder<=brushEdge ? att= distanceToBorder/brushEdge : att=1.0;\r\n' +
-
-                '       vec3 auxCombedNormal = rotate(normalize(rm_C_Normal),combWorldDir3D.xyz,combAngle*att);\r\n' +
+                '       float normalAtt;\r\n' +
+                '       normalViewAngle<0.9 ? normalAtt= (normalViewAngle-0.6)/0.3 : normalAtt=1.0;\r\n' +
+                //
+                
+                '       vec3 auxCombedNormal = rotate(normalize(rm_C_Normal),cross(combWorldDir3D,rm_Normal),combAngle*att*normalAtt);\r\n' +
+                
                 '       if(currentAngle<0.5) {\r\n' + //If angle is higher than 45, stop rotating unless is to the opposite side
                 '           newAngle = dot(auxCombedNormal,rm_Normal);\r\n' +
                 '           if(newAngle<currentAngle) return;\r\n' +
                 '       } \r\n' +
-
+                
                 '      combedNormal = auxCombedNormal;\r\n' +
                 '       }\r\n' +
-
+                
                 '    }else {combedNormal = rm_C_Normal;}\r\n' +
-
+                
                 '}';
 
+            //Rasterization should be disabled
             this.fragmentShaderCode = '#version 300 es\r\n' +
                 'precision mediump float;\n' +
                 'void main() {\n' +
@@ -95,7 +105,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.view_proj_matrix = this.getUniform('view_proj_matrix');
             this.mousePos = this.getUniform('mouseNDCPos');
             this.mouseRadio = this.getUniform('mouseNDCRadio');
-            this.combViewDir3D = this.getUniform('combViewDir3D');
+            this.combNDCdir = this.getUniform('combNDCdir');
             this.combAngle = this.getUniform('combAngle');
 
 

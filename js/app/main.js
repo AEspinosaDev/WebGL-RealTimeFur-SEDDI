@@ -200,27 +200,32 @@ define([
                 }
                 if (renderer.combing) {
 
-                    var speed = renderer.rotationFactor / renderer.canvas.clientHeight;
-                    var dx = speed * (x - renderer.mouseLastPosition[0]);
-                    var dy = speed * (y - renderer.mouseLastPosition[1]);
-
-
-                    renderer.combAngle = 0.75 * Math.sqrt(dx * dx + dy * dy);
-                    renderer.combViewDirection2D = [dx, dy];
-
-                    // console.log(renderer.combViewDirection2D);
-                    renderer.mouseLastPosition[0] = x;
-                    renderer.mouseLastPosition[1] = y;
-
                     //Normalize device coordinates CLIP position
                     const canvas = gl.canvas;
                     const rect = canvas.getBoundingClientRect();
                     const aux_x = x - rect.left;
                     const aux_y = y - rect.top;
-                    renderer.mouseNDCPosition[0] = aux_x / rect.width * 2 - 1;
-                    renderer.mouseNDCPosition[1] = aux_y / rect.height * -2 + 1;
+                    const new_x = aux_x / rect.width * 2 - 1;
+                    const new_y =  aux_y / rect.height * -2 + 1;
+
+                    var speed = renderer.rotationFactor / renderer.canvas.clientHeight;
+                    var dx = 10*(new_x - renderer.mouseNDCPosition[0]);
+                    var dy = 10*(new_y - renderer.mouseNDCPosition[1]);
+
+
+                    // renderer.combAngle = Math.sqrt(dx * dx + dy * dy);
+                    renderer.combAngle = 0.1;
+                    renderer.combViewDirection2D = [dx, dy];
+
+                    renderer.mouseNDCPosition[0] = new_x;
+                    renderer.mouseNDCPosition[1] = new_y;
 
                     renderer.combNDCRadius = renderer.combRadius / (rect.width * 0.5);
+
+
+                    renderer.mouseLastPosition[0] = x;
+                    renderer.mouseLastPosition[1] = y;
+
 
 
 

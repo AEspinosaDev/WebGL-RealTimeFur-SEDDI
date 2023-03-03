@@ -176,6 +176,7 @@ define([
                     .html(percent); // update loading progress
 
                 if (this.loadedItemsCount >= this.ITEMS_TO_LOAD) {
+                    // this.createDepthFBO();
                     this.createRenderFBO();
                     this.loaded = true; // allow rendering
                     console.log('Loaded all assets');
@@ -192,7 +193,7 @@ define([
                 var boundUpdateCallback = this.updateLoadedObjectsCount.bind(this);
 
                 this.modelCube = new FullModel(true);
-
+                // this.modelFloor = new FullModel(true);
                 //this.modelCube.load('data/models/box10_rounded', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
@@ -201,7 +202,7 @@ define([
                 this.modelCube.loadJson('data/models/bunnyUV.json', boundUpdateCallback);
                 // this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
                 // this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
-                // this.modelCube.loadJson('data/models/bear.json', boundUpdateCallback);
+                // this.modelFloor.loadJson('data/models/plane.json', boundUpdateCallback);
 
                 // this.textureChecker = UncompressedTextureLoader.load('data/textures/checker.png', boundUpdateCallback);
                 this.textureBackground = UncompressedTextureLoader.load('data/textures/bg-gradient.png', boundUpdateCallback);
@@ -418,7 +419,10 @@ define([
                 this.positionCamera([190, 0, 270], [0, 0, 0], [0, 0, 1]);
                 this.setCameraFOV(0.6);
 
-                this.drawCubeDiffuse(this.textureFurDiffuse, this.currentPreset);
+                this.drawModelDiffuse(this.modelCube,this.textureFurDiffuse, this.currentPreset);
+
+               
+                // this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled( this.currentPreset, this.diffuseColoredShader, this.modelFloor, 0, 0, -45, 0, this.dragAngles[0], this.dragAngles[1], 2, 2, 2);
 
                 if (this.combing && this.mouseMoving) {
                     //Compute shader for normals
@@ -476,15 +480,16 @@ define([
             }
 
 
-            drawCubeDiffuse(texture, preset) {
+            drawModelDiffuse(model,texture, preset) {
 
                 this.diffuseColoredShader.use();
                 this.setTexture2D(0, texture, this.diffuseColoredShader.diffuseMap);
                 this.setTexture2D(1, this.depthTexture, this.diffuseColoredShader.depthMap);
                 gl.uniform4f(this.diffuseColoredShader.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
-                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, this.diffuseColoredShader, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
+                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, this.diffuseColoredShader,model, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
 
             }
+
 
             drawFur(textureDiffuse, textureAlpha, preset) {
                 this.shaderFin.use();
@@ -606,27 +611,33 @@ define([
 
             }
             computeCombedNormals(computeShader, model) {
+
+                this.calculateMVPMatrix(0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
+                
                 computeShader.use();
+
 
                 gl.uniform1f(computeShader.combAngle, this.combAngle);
                 gl.uniformMatrix4fv(computeShader.view_model_matrix, false, this.mMVMatrix);
                 gl.uniformMatrix4fv(computeShader.view_proj_matrix, false, this.mMVPMatrix);
                 
-                // //Mouse clip position
+                // // //Mouse clip position
                 // var mouseWorldPoss = MatrixUtils.vec3.create();
-                // MatrixUtils.vec3.set(mouseWorldPoss, this.mouseClipPosition[0]
-                //     , this.mouseClipPosition[1]
+                // MatrixUtils.vec3.set(mouseWorldPoss, this.combViewDirection2D[0]
+                //     , this.combViewDirection2D[1]
                 //     , 0);
                 // var inverseMVP = MatrixUtils.mat4.create();
                 // MatrixUtils.mat4.invert(inverseMVP, this.mMVPMatrix);
                 // MatrixUtils.vec3.transformMat4(mouseWorldPoss, mouseWorldPoss, inverseMVP);
+                //     console.log(mouseWorldPoss);
+
                 // gl.uniform3f(computeShader.mousePos, mouseWorldPoss[0],mouseWorldPoss[1], mouseWorldPoss[2]);
                 
                 gl.uniform3f(computeShader.mousePos, this.mouseNDCPosition[0], this.mouseNDCPosition[1],0);
                 //Bursh radio
                 gl.uniform1f(computeShader.mouseRadio, this.combNDCRadius);
                 
-                gl.uniform3f(computeShader.combViewDir3D, this.combViewDirection2D[0], this.combViewDirection2D[1], 0);
+                gl.uniform3f(computeShader.combNDCdir, this.combViewDirection2D[0], this.combViewDirection2D[1], 0);
 
 
                 //Compute shell normals
@@ -693,38 +704,38 @@ define([
                 this.lastTime = timeNow;
             }
 
-            // createDepthFBO() {
+            createDepthFBO() {
 
 
-            //     this.depthTexture = gl.createTexture();
-            //     this.depthTextureSize = 1024;
-            //     gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
-            //     gl.texImage2D(
-            //         gl.TEXTURE_2D,      // target
-            //         0,                  // mip level
-            //         gl.DEPTH_COMPONENT24, // internal format
-            //         this.depthTextureSize,   // width
-            //         this.depthTextureSize,   // height
-            //         0,                  // border
-            //         gl.DEPTH_COMPONENT, // format
-            //         gl.UNSIGNED_INT,    // type
-            //         null);              // data
-            //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                this.depthTexture = gl.createTexture();
+                this.depthTextureSize = 1024;
+                gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
+                gl.texImage2D(
+                    gl.TEXTURE_2D,      // target
+                    0,                  // mip level
+                    gl.DEPTH_COMPONENT24, // internal format
+                    this.depthTextureSize,   // width
+                    this.depthTextureSize,   // height
+                    0,                  // border
+                    gl.DEPTH_COMPONENT, // format
+                    gl.UNSIGNED_INT,    // type
+                    null);              // data
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-            //     this.depthFramebuffer = gl.createFramebuffer();
-            //     gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
-            //     gl.framebufferTexture2D(
-            //         gl.FRAMEBUFFER,       // target
-            //         gl.DEPTH_ATTACHMENT,  // attachment point
-            //         gl.TEXTURE_2D,        // texture target
-            //         this.depthTexture,         // texture
-            //         0);                   // mip level
+                this.depthFramebuffer = gl.createFramebuffer();
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
+                gl.framebufferTexture2D(
+                    gl.FRAMEBUFFER,       // target
+                    gl.DEPTH_ATTACHMENT,  // attachment point
+                    gl.TEXTURE_2D,        // texture target
+                    this.depthTexture,         // texture
+                    0);                   // mip level
 
 
-            // }
+            }
 
             createRenderFBO() {
 
