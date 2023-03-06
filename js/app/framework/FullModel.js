@@ -388,10 +388,6 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
             gl.enableVertexAttribArray(shader.rm_C_Normal);
             gl.vertexAttribPointer(shader.rm_C_Normal, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
             
-            type ? gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTangents) : gl.bindBuffer(gl.ARRAY_BUFFER, this.finBufferTangents);
-            gl.enableVertexAttribArray(shader.rm_Tangent);
-            gl.vertexAttribPointer(shader.rm_Tangent, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
-
         },
        
 

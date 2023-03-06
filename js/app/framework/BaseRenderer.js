@@ -165,7 +165,7 @@ define([
             var gl = null;
 
             try {
-                gl = canvas.getContext('webgl2');
+                gl = canvas.getContext('webgl2',{antialias: true});
             } catch (e) {}
             this.isWebGL2 = !!gl;
 
@@ -173,6 +173,7 @@ define([
                 console.warn('Could not initialise WebGL 2, falling back to WebGL 1');
                 return this.initGL(canvas);
             } else {
+                // console.warn('WebGL 2 initialized');
                 return gl;
             }
             

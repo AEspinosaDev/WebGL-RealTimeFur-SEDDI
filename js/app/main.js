@@ -267,6 +267,7 @@ define([
                 $('#sliderAmbientStrength').slider('setValue', renderer.ambientStrength);
                 $('#sliderDiffusePower').slider('setValue', renderer.diffusePower);
                 $('#sliderSpecularPower').slider('setValue', renderer.specularPower);
+               
 
                 clearTimeout(timeoutHideName);
                 $('#presetName')

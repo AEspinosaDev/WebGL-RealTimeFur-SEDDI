@@ -83,6 +83,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform float textureFactor;\n' +
 
                 'uniform int finOpacity;\n' +
+                'uniform int useColorText;\n' +
                 
                 'out vec4 fragColor;\n' +
 
@@ -117,9 +118,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '   outTextCoord = vec2(outTextCoord.x*textureFactor,outTextCoord.y);\n' +
                
                 '   float outAlpha = alpha*texture(alphaMap,outTextCoord).r;\n' +
-                // '   float outAlpha = alpha*texture(alphaMap, vTextureCoord).r;\n' +
-                // '   Ka = texture(diffuseMap, outTextCoord).rgb;\r\n' +
-                '   Ka = hairColor;\r\n' +
+                '   useColorText == 0 ? Ka = hairColor : Ka = texture(diffuseMap, vTextureCoord).rgb;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
 
@@ -207,6 +206,8 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.hairColor = this.getUniform('hairColor');
 
             this.textureFactor = this.getUniform('textureFactor');
+            this.useColorText = this.getUniform('useColorText');
+
         }
     }
 

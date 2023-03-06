@@ -52,6 +52,8 @@ define([
                 this.matOrtho = MatrixUtils.mat4.create();
                 MatrixUtils.mat4.ortho(this.matOrtho, -1, 1, -1, 1, 2.0, 250);
 
+                this.models = new Map();
+
                 //Conditionals
                 this.renderFins = true;
                 this.renderShells = true;
@@ -71,7 +73,7 @@ define([
                 this.CURLY_AMP_STEP = 0.0006;
                 this.CURLY_AMP_OFFSET = 0.008;
 
-                this.furColor = [0.89, 0.82, 0.65]
+                // this.furColor = [0.89, 0.82, 0.65];
 
                 //Mouse and UI events
                 this.mouseMoving = false;
@@ -103,7 +105,7 @@ define([
                 this.ambientStrength = 0.5;
 
 
-                this.ITEMS_TO_LOAD = 5; // total number of OpenGL buffers+textures to load
+                this.ITEMS_TO_LOAD = 7; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
                 this.TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * this.FLOAT_SIZE_BYTES;
                 this.TRIANGLE_VERTICES_DATA_POS_OFFSET = 0;
@@ -178,6 +180,7 @@ define([
                 if (this.loadedItemsCount >= this.ITEMS_TO_LOAD) {
                     // this.createDepthFBO();
                     this.createRenderFBO();
+                    // this.createMultisamplingProtocol();
                     this.loaded = true; // allow rendering
                     console.log('Loaded all assets');
                     $('#row-progress').hide();
@@ -192,23 +195,27 @@ define([
             loadData() {
                 var boundUpdateCallback = this.updateLoadedObjectsCount.bind(this);
 
-                this.modelCube = new FullModel(true);
-                // this.modelFloor = new FullModel(true);
-                //this.modelCube.load('data/models/box10_rounded', boundUpdateCallback);
+                var modelCube = new FullModel(true);
+                modelCube.loadJson('data/models/bunnyUV.json', boundUpdateCallback);
+                this.models.set("rabbit",modelCube);
+                var modelDog = new FullModel(true);
+                modelDog.loadJson('data/models/dog.json', boundUpdateCallback);
+                this.models.set("dog",modelDog);
+               
+
                 //this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
                 // this.modelCube.loadJson('data/models/plane.json', boundUpdateCallback);
                 // this.modelCube.loadJson('data/models/bunny.json', boundUpdateCallback);
-                this.modelCube.loadJson('data/models/bunnyUV.json', boundUpdateCallback);
                 // this.modelCube.loadJson('data/models/cube_rounded.json', boundUpdateCallback);
                 // this.modelCube.loadJson('data/models/sphere.json', boundUpdateCallback);
-                // this.modelFloor.loadJson('data/models/plane.json', boundUpdateCallback);
 
                 // this.textureChecker = UncompressedTextureLoader.load('data/textures/checker.png', boundUpdateCallback);
                 this.textureBackground = UncompressedTextureLoader.load('data/textures/bg-gradient.png', boundUpdateCallback);
 
                 this.currentPreset = Object.assign({}, FurPresets.current());
 
+                this.textureDiffuse = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('diffuseTexture'), boundUpdateCallback);
                 this.textureFurAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('alphaTexture'), boundUpdateCallback);
                 this.textureFurTipAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('tipAlphaTexture'), boundUpdateCallback);
                 this.textureFinAlpha = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('finAlphaTexture'), boundUpdateCallback);
@@ -231,11 +238,13 @@ define([
             }
 
             loadNextFurTextures(callback) {
+                this.textureDiffuse && gl.deleteTexture(this.textureDiffuseNext);
                 this.textureFinAlphaNext && gl.deleteTexture(this.textureFinAlphaNext);
                 this.textureFurAlphaNext && gl.deleteTexture(this.textureFurAlphaNext);
                 this.textureFurTipAlphaNext && gl.deleteTexture(this.textureFurTipAlphaNext);
 
 
+                this.textureDiffuseNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('diffuseTexture'), callback);
                 this.textureFurAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('alphaTexture'), callback);
                 this.textureFurTipAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('tipAlphaTexture'), callback);
                 this.textureFinAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getCurrentPresetParameter('finAlphaTexture'), callback);
@@ -292,6 +301,13 @@ define([
             get finTextureSize() {
                 return this.currentPreset['finTextureSize'];
             }
+
+            set furColor(value){
+                this.currentPreset['diffuseColor'] = value;
+            }
+            get furColor(){
+                return this.currentPreset['diffuseColor'];
+            }
             //#endregion
 
             loadPreset(preset) {
@@ -303,7 +319,7 @@ define([
 
                 root.loadNextFurTextures(function () {
                     counter++;
-                    if (counter == 3) {
+                    if (counter == 4) {
                         root.loadingNextFur = false;
                     }
                 });
@@ -369,15 +385,18 @@ define([
 
 
                 if (!this.loadingNextFur) {
-                    if (this.textureFinAlphaNext && this.textureFurTipAlphaNext && this.textureFurAlphaNext) {
+                    if (this.textureDiffuseNext && this.textureFinAlphaNext && this.textureFurTipAlphaNext && this.textureFurAlphaNext) {
                         this.currentPreset = Object.assign({}, FurPresets.current());
                         this.onPresetLoaded && this.onPresetLoaded();
+                        gl.deleteTexture(this.textureDiffuse);
                         gl.deleteTexture(this.textureFurTipAlpha);
                         gl.deleteTexture(this.textureFurAlpha);
                         // gl.deleteTexture(this.textureFinAlphaNext);
+                        this.textureDiffuse = this.textureDiffuseNext;
                         this.textureFinAlpha = this.textureFinAlphaNext;
                         this.textureFurTipAlpha = this.textureFurTipAlphaNext;
                         this.textureFurAlpha = this.textureFurAlphaNext;
+                        this.textureDiffuseNext = null;
                         this.textureFinAlphaNext = null;
                         this.textureFurTipAlphaNext = null;
                         this.textureFurAlphaNext = null;
@@ -407,7 +426,8 @@ define([
 
                 //Render to texture
                 gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderFramebuffer);
-                // gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderFramebuffer);
+                // gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderBuffer);
+
 
                 gl.clearColor(0.3, 0.3, 0.3, 1.0);
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -419,14 +439,14 @@ define([
                 this.positionCamera([190, 0, 270], [0, 0, 0], [0, 0, 1]);
                 this.setCameraFOV(0.6);
 
-                this.drawModelDiffuse(this.modelCube,this.textureFurDiffuse, this.currentPreset);
+                this.drawModelDiffuse(this.models.get(this.currentPreset['mesh']), this.textureFurDiffuse, this.currentPreset);
 
-               
+
                 // this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled( this.currentPreset, this.diffuseColoredShader, this.modelFloor, 0, 0, -45, 0, this.dragAngles[0], this.dragAngles[1], 2, 2, 2);
 
                 if (this.combing && this.mouseMoving) {
                     //Compute shader for normals
-                    this.computeCombedNormals(this.computeShader, this.modelCube);
+                    this.computeCombedNormals(this.computeShader, this.models.get(this.currentPreset['mesh']));
                 }
 
                 gl.depthMask(false);
@@ -435,13 +455,23 @@ define([
                 gl.enable(gl.BLEND);
 
                 if (this.renderFur) {
-                    this.drawFur(this.textureFurDiffuse, this.textureFurAlpha, this.currentPreset);
+                    this.drawFur(this.textureDiffuse, this.textureFurAlpha, this.currentPreset);
                 }
 
                 gl.disable(gl.BLEND);
 
 
+                // //Blit renderBuffer to colorBuffer
+                // gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.renderBuffer);
+                // gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.colorBuffer);
+                // gl.clearBufferfv(gl.COLOR, 0, [1.0, 1.0, 1.0, 1.0]);
+                // gl.blitFramebuffer(0, 0, this.canvas.clientWidth, this.canvas.clientHeight,
+                //     0, 0, this.canvas.clientWidth, this.canvas.clientHeight,
+                //     gl.COLOR_BUFFER_BIT, gl.LINEAR);
+
+
                 //Post process pass
+                // gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderBuffer);
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
                 gl.clearColor(0.3, 0.3, 0.3, 1.0);
@@ -459,6 +489,15 @@ define([
                 this.drawVignette(this.targetTexture);
 
                 gl.uniform1i(this.VignetteShader.isPostProcess, false);
+
+                //  //Blit renderBuffer to default buffer
+                //  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.renderBuffer);
+                //  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,null);
+                //  gl.clearBufferfv(gl.COLOR, 0, [1.0, 1.0, 1.0, 1.0]);
+                //  gl.blitFramebuffer(0, 0, this.canvas.clientWidth, this.canvas.clientHeight,
+                //      0, 0, this.canvas.clientWidth, this.canvas.clientHeight,
+                //      gl.COLOR_BUFFER_BIT, gl.LINEAR);
+ 
 
             }
 
@@ -480,38 +519,40 @@ define([
             }
 
 
-            drawModelDiffuse(model,texture, preset) {
+            drawModelDiffuse(model, texture, preset) {
 
                 this.diffuseColoredShader.use();
                 this.setTexture2D(0, texture, this.diffuseColoredShader.diffuseMap);
                 this.setTexture2D(1, this.depthTexture, this.diffuseColoredShader.depthMap);
                 gl.uniform4f(this.diffuseColoredShader.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
-                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, this.diffuseColoredShader,model, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
+                this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, this.diffuseColoredShader, model, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
 
             }
 
 
             drawFur(textureDiffuse, textureAlpha, preset) {
                 this.shaderFin.use();
+                gl.uniform1i(this.shaderFin.useColorText,preset['useColorText']);
                 this.setTexture2D(0, textureDiffuse, this.shaderFin.diffuseMap);
                 this.setTexture2D(1, this.textureFinAlpha, this.shaderFin.alphaMap);
-
+                
                 if (this.renderFins) {
-                    this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
+                    this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin,this.models.get(preset['mesh']), 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
                 }
-
+                
                 gl.depthMask(true);
                 // gl.enable(gl.BLEND);
                 gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
-
-
+                
+                
                 this.shaderShell.use();
+                gl.uniform1i(this.shaderShell.useColorText,preset['useColorText']);
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
                 this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
                 this.setTexture2D(2, this.textureFurTipAlpha, this.shaderShell.alphaMapTip);
 
                 if (this.renderShells) {
-                    this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
+                    this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.models.get(preset['mesh']), 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
                 }
 
             }
@@ -613,14 +654,14 @@ define([
             computeCombedNormals(computeShader, model) {
 
                 this.calculateMVPMatrix(0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
-                
+
                 computeShader.use();
 
 
                 gl.uniform1f(computeShader.combAngle, this.combAngle);
                 gl.uniformMatrix4fv(computeShader.view_model_matrix, false, this.mMVMatrix);
                 gl.uniformMatrix4fv(computeShader.view_proj_matrix, false, this.mMVPMatrix);
-                
+
                 // // //Mouse clip position
                 // var mouseWorldPoss = MatrixUtils.vec3.create();
                 // MatrixUtils.vec3.set(mouseWorldPoss, this.combViewDirection2D[0]
@@ -632,11 +673,11 @@ define([
                 //     console.log(mouseWorldPoss);
 
                 // gl.uniform3f(computeShader.mousePos, mouseWorldPoss[0],mouseWorldPoss[1], mouseWorldPoss[2]);
-                
-                gl.uniform3f(computeShader.mousePos, this.mouseNDCPosition[0], this.mouseNDCPosition[1],0);
+
+                gl.uniform3f(computeShader.mousePos, this.mouseNDCPosition[0], this.mouseNDCPosition[1], 0);
                 //Bursh radio
                 gl.uniform1f(computeShader.mouseRadio, this.combNDCRadius);
-                
+
                 gl.uniform3f(computeShader.combNDCdir, this.combViewDirection2D[0], this.combViewDirection2D[1], 0);
 
 
@@ -798,6 +839,72 @@ define([
                 gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthRenderBuffer);
                 gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.canvas.clientWidth, this.canvas.clientHeight);
                 gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+            }
+            createMultisamplingProtocol() {
+
+                this.targetTexture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, this.targetTexture);
+
+
+                // define size and format of level 0
+                const level = 0;
+                const internalFormat = gl.RGBA;
+                const border = 0;
+                const format = gl.RGBA;
+                const type = gl.UNSIGNED_BYTE;
+                const data = null;
+                gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                    this.canvas.clientWidth, this.canvas.clientHeight, border,
+                    format, type, data);
+
+                // set the filtering so we don't need mips
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+                this.renderBuffer = gl.createFramebuffer();
+                this.colorBuffer = gl.createFramebuffer();
+
+                this.colorRenderbuffer = gl.createRenderbuffer();
+
+                gl.bindRenderbuffer(gl.RENDERBUFFER,
+                    this.colorRenderbuffer);
+
+                gl.renderbufferStorageMultisample(gl.RENDERBUFFER,
+                    // gl.getParameter(gl.MAX_SAMPLES),
+                    4,
+                    gl.RGBA8,
+                    this.canvas.clientWidth,
+                    this.canvas.clientHeight);
+
+                gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderBuffer);
+
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER,
+                    gl.COLOR_ATTACHMENT0,
+                    gl.RENDERBUFFER,
+                    this.colorRenderbuffer);
+
+                    //Create depth attachment    
+                // this.depthRenderBuffer = gl.createRenderbuffer();
+                // gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthRenderBuffer);
+                // gl.renderbufferStorageMultisample(gl.RENDERBUFFER, gl.getParameter(gl.MAX_SAMPLES) ,gl.DEPTH_STENCIL, this.canvas.clientWidth, this.canvas.clientHeight);
+                // gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+                // gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.depthRenderBuffer);
+
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.colorBuffer);
+
+
+                gl.framebufferTexture2D(
+                    gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.targetTexture, level);
+
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+
             }
         }
 

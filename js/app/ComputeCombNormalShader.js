@@ -13,7 +13,6 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in vec4 rm_Vertex;\n' +
                 'in vec3 rm_Normal;\n' +
                 'in vec3 rm_C_Normal;\n' +
-                'in vec3 rm_Tangent;\n' +
 
                 'uniform mat4 view_model_matrix;\r\n' +
                 'uniform vec3 combNDCdir;\n' +
@@ -111,7 +110,6 @@ define(['framework/BaseShader'], function (BaseShader) {
 
             this.rm_Vertex = this.getAttrib('rm_Vertex');
             this.rm_Normal = this.getAttrib('rm_Normal');
-            this.rm_Tangent = this.getAttrib('rm_Tangent');
 
             this.rm_C_Normal = this.getAttrib('rm_C_Normal');
 

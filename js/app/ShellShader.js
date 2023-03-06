@@ -38,7 +38,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'out vec3 vPos;\n' +
                 'out vec3 lightViewPos;\n' +
                 'out float textureOffset;\r\n' +
-
+                
+                'out vec3 normal;\n' +
                 
                 // 'mat4 rotationMatrix(vec3 axis, float angle) {\n' +
                 // '   axis = normalize(axis);\n' +
@@ -80,6 +81,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '    curlynessCoeff = mix(0.0, 1.0, layerCoeff);\r\n' +
 
                 '   hairNormal = mat3(transpose(inverse(view_model_matrix))) * rm_C_Normal;\n' +
+                '   normal = mat3(transpose(inverse(view_model_matrix))) * rm_Normal;\n' +
 
                 '    lightViewPos = (view_matrix * vec4(lightPos,1.0)).xyz;\n' +
 
@@ -100,6 +102,7 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 'uniform vec3 hairColor;\n' +
                 'uniform float textureFactor;\n' +
+                'uniform int useColorText;\n' +
 
 
                 'in vec2 vTexCoord0;\r\n' +
@@ -110,6 +113,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in float curlynessCoeff;\r\n' +
                 'in float textureOffset;\r\n' +
 
+                'in vec3 normal;\n' +
+                
                 'out vec4 fragColor;\r\n' +
 
                 //Powers
@@ -131,7 +136,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '\r\n' +
                 'void main()\r\n' +
                 '{\r\n' +
-                '   Ka = hairColor;\r\n' +
+                '   useColorText == 0 ? Ka = hairColor : Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.1;\r\n' +
                 '   float alphaColor = mix(texture(alphaMap, vTexCoord0*textureFactor).r,texture(alphaMapTip, vTexCoord0*textureFactor).r,curlynessCoeff-0.2);\r\n' +
@@ -173,7 +178,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  float u =dot(T,L);\n' + //Lambertian
                 '  float v =dot(T,H);\n' + //Spec
 
-                '  vec3 color = Sa*Ka+Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5);\n' +
+                // '  vec3 color = Sa*Ka+(Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5))*clamp(dot(normalize(normal),L),0.0,1.0);\n' +
+                '  vec3 color = Sa*Ka+(Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5));\n' +
 
                 '  return vec4(color,1.0)*intensity;\n' +
                 '}\n' +
@@ -198,7 +204,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.view_model_matrix = this.getUniform('view_model_matrix');
             this.rm_Vertex = this.getAttrib('rm_Vertex');
             this.rm_TexCoord0 = this.getAttrib('rm_TexCoord0');
-            // this.rm_Normal = this.getAttrib('rm_Normal');
+            this.rm_Normal = this.getAttrib('rm_Normal');
             this.rm_C_Normal = this.getAttrib('rm_C_Normal');
             // this.rm_Tangent = this.getAttrib('rm_Tangent');
 
@@ -227,6 +233,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.hairColor = this.getUniform('hairColor');
 
             this.textureFactor = this.getUniform('textureFactor');
+            this.useColorText = this.getUniform('useColorText');
 
 
 
