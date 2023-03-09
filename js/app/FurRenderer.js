@@ -6,6 +6,7 @@ define([
     'ShellShader',
     'ShadowMapShader',
     'ComputeCombNormalShader',
+    'PerlinNoiseShader',
     'FinShader',
     'VignetteShader',
     'DiffuseColoredShader',
@@ -22,6 +23,7 @@ define([
         ShellShader,
         ShadowMapShader,
         ComputeCombNormalShader,
+        PerlinNoiseShader,
         FinShader,
         VignetteShader,
         DiffuseColoredShader,
@@ -54,11 +56,14 @@ define([
 
                 this.models = new Map();
 
+                this.noiseTextSize = 4096;
+
                 //Conditionals
                 this.renderFins = true;
                 this.renderShells = true;
                 this.renderFur = true;
                 this.finOpacity = false;
+                this.recalculateNoiseText = true;
 
                 //HairProperties not in presets
                 this.curlyness = 0;
@@ -93,8 +98,7 @@ define([
                 this.combAngle = 0;
                 this.combViewDirection2D = [0, 0];
 
-                // this.inMousePosition =[0,0];
-                // this.outMousePosition =[0,0];
+
 
                 //Light
                 this.lightPos = [100.0, 100.0, 100.0]; //point light //z,x,y because up is the last coord
@@ -102,10 +106,10 @@ define([
                 this.lightIntensity = 1.0;
                 this.shadowsEnabled = true;
 
-                this.ambientStrength = 0.5;
+                this.ambientStrength = 0.6;
 
 
-                this.ITEMS_TO_LOAD = 7; // total number of OpenGL buffers+textures to load
+                this.ITEMS_TO_LOAD = 8; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
                 this.TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * this.FLOAT_SIZE_BYTES;
                 this.TRIANGLE_VERTICES_DATA_POS_OFFSET = 0;
@@ -160,7 +164,8 @@ define([
                 this.diffuseColoredShader = new DiffuseColoredShader();
                 this.shaderShell = new ShellShader();
                 this.shaderFin = new FinShader();
-                this.computeShader = new ComputeCombNormalShader(['combedNormal'])
+                this.computeShader = new ComputeCombNormalShader(['combedNormal']);
+                this.perlinNoiseShader = new PerlinNoiseShader();
             }
 
             /**
@@ -178,9 +183,10 @@ define([
                     .html(percent); // update loading progress
 
                 if (this.loadedItemsCount >= this.ITEMS_TO_LOAD) {
-                    // this.createDepthFBO();
+
                     this.createRenderFBO();
-                    // this.createMultisamplingProtocol();
+                    this.createNoiseTextureFBO(this.noiseTextSize);
+
                     this.loaded = true; // allow rendering
                     console.log('Loaded all assets');
                     $('#row-progress').hide();
@@ -197,11 +203,13 @@ define([
 
                 var modelCube = new FullModel(true);
                 modelCube.loadJson('data/models/bunnyUV.json', boundUpdateCallback);
-                this.models.set("rabbit",modelCube);
+                this.models.set("rabbit", modelCube);
                 var modelDog = new FullModel(true);
                 modelDog.loadJson('data/models/dog.json', boundUpdateCallback);
-                this.models.set("dog",modelDog);
-               
+                this.models.set("dog", modelDog);
+                var modelCloth = new FullModel(true);
+                modelCloth.loadJson('data/models/cloth.json', boundUpdateCallback);
+                this.models.set("cloth", modelCloth);
 
                 //this.modelCube.loadJson('data/models/cube_bigger.json', boundUpdateCallback);
                 //this.modelCube.loadJson('data/models/cube_round_borders.json', boundUpdateCallback);
@@ -242,7 +250,6 @@ define([
                 this.textureFinAlphaNext && gl.deleteTexture(this.textureFinAlphaNext);
                 this.textureFurAlphaNext && gl.deleteTexture(this.textureFurAlphaNext);
                 this.textureFurTipAlphaNext && gl.deleteTexture(this.textureFurTipAlphaNext);
-
 
                 this.textureDiffuseNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('diffuseTexture'), callback);
                 this.textureFurAlphaNext = UncompressedTextureLoader.load('data/textures/' + this.getNextPresetParameter('alphaTexture'), callback);
@@ -302,10 +309,10 @@ define([
                 return this.currentPreset['finTextureSize'];
             }
 
-            set furColor(value){
+            set furColor(value) {
                 this.currentPreset['diffuseColor'] = value;
             }
-            get furColor(){
+            get furColor() {
                 return this.currentPreset['diffuseColor'];
             }
             //#endregion
@@ -403,24 +410,26 @@ define([
                     }
                 }
 
+                if (this.recalculateNoiseText) {
+                    this.recalculateNoiseText = false;
+
+                    gl.viewport(0, 0,  this.noiseTextSize,  this.noiseTextSize);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderBuffer);
+
+                    this.drawNoiseTexture();
+
+                    //Blit renderBuffer to colorBuffer
+                    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.renderBuffer);
+                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.colorBuffer);
+                    gl.clearBufferfv(gl.COLOR, 0, [1.0, 1.0, 1.0, 1.0]);
+                    gl.blitFramebuffer(0, 0, this.noiseTextSize, this.noiseTextSize,
+                        0, 0, this.noiseTextSize, this.noiseTextSize,
+                        gl.COLOR_BUFFER_BIT, gl.LINEAR);
+
+                }
+
                 this.resizeRenderFBO();
 
-                //Shadow mapping pass
-                // if (this.shadowsEnabled) {
-
-                //     gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFramebuffer);
-                //     gl.viewport(0, 0, this.depthTextureSize, this.depthTextureSize);
-                //     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-
-
-                //     this.positionCamera(this.lightPos, [0, 0, 0], [0, 0, 1]);
-                //     this.setCameraFOV(0.6);
-                //     this.shadowMapShader.use();
-
-                //     this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.currentPreset, this.shadowMapShader, this.modelCube, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
-
-                // }
 
                 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -436,13 +445,14 @@ define([
                 this.drawVignette(this.textureBackground);
                 gl.depthMask(true);
 
-                this.positionCamera([190, 0, 270], [0, 0, 0], [0, 0, 1]);
+                this.positionCamera([250, 0, 0], [0, 0, 0], [0, 0, 1]);
                 this.setCameraFOV(0.6);
 
                 this.drawModelDiffuse(this.models.get(this.currentPreset['mesh']), this.textureFurDiffuse, this.currentPreset);
 
+                // this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(this.currentPreset, this.diffuseColoredShader, this.modelLight,
+                //    -50, 50,50, 0, 0, 0, 0.5, 0.5, 0.5);
 
-                // this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled( this.currentPreset, this.diffuseColoredShader, this.modelFloor, 0, 0, -45, 0, this.dragAngles[0], this.dragAngles[1], 2, 2, 2);
 
                 if (this.combing && this.mouseMoving) {
                     //Compute shader for normals
@@ -487,6 +497,7 @@ define([
 
                 }
                 this.drawVignette(this.targetTexture);
+                // this.drawVignette(this.hairAlphaNoiseTexture);
 
                 gl.uniform1i(this.VignetteShader.isPostProcess, false);
 
@@ -497,7 +508,7 @@ define([
                 //  gl.blitFramebuffer(0, 0, this.canvas.clientWidth, this.canvas.clientHeight,
                 //      0, 0, this.canvas.clientWidth, this.canvas.clientHeight,
                 //      gl.COLOR_BUFFER_BIT, gl.LINEAR);
- 
+
 
             }
 
@@ -525,6 +536,7 @@ define([
                 this.setTexture2D(0, texture, this.diffuseColoredShader.diffuseMap);
                 this.setTexture2D(1, this.depthTexture, this.diffuseColoredShader.depthMap);
                 gl.uniform4f(this.diffuseColoredShader.color, preset.startColor[0], preset.startColor[1], preset.startColor[2], preset.startColor[3]);
+                gl.uniform3f(this.diffuseColoredShader.skinColor, preset.skinColor[0], preset.skinColor[1], preset.skinColor[2]);
                 this.drawDiffuseNormalStrideVBOTranslatedRotatedScaled(preset, this.diffuseColoredShader, model, 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
 
             }
@@ -532,24 +544,26 @@ define([
 
             drawFur(textureDiffuse, textureAlpha, preset) {
                 this.shaderFin.use();
-                gl.uniform1i(this.shaderFin.useColorText,preset['useColorText']);
+                gl.uniform1i(this.shaderFin.useColorText, preset['useColorText']);
                 this.setTexture2D(0, textureDiffuse, this.shaderFin.diffuseMap);
                 this.setTexture2D(1, this.textureFinAlpha, this.shaderFin.alphaMap);
-                
+
                 if (this.renderFins) {
-                    this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin,this.models.get(preset['mesh']), 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
+                    this.drawFinsVBOTranslatedRotatedScaled(preset, this.shaderFin, this.models.get(preset['mesh']), 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
                 }
-                
+
                 gl.depthMask(true);
                 // gl.enable(gl.BLEND);
                 gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
-                
-                
+
+
                 this.shaderShell.use();
-                gl.uniform1i(this.shaderShell.useColorText,preset['useColorText']);
+                gl.uniform1i(this.shaderShell.useColorText, preset['useColorText']);
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
                 this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
+                // this.setTexture2D(1, this.hairAlphaNoiseTexture, this.shaderShell.alphaMap);
                 this.setTexture2D(2, this.textureFurTipAlpha, this.shaderShell.alphaMapTip);
+                // this.setTexture2D(2, this.hairAlphaNoiseTexture, this.shaderShell.alphaMapTip);
 
                 if (this.renderShells) {
                     this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.models.get(preset['mesh']), 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
@@ -651,6 +665,18 @@ define([
                 gl.drawElements(gl.TRIANGLES, model.numFinIndices, gl.UNSIGNED_SHORT, 0);
 
             }
+
+
+            drawNoiseTexture() {
+                this.perlinNoiseShader.use();
+
+                gl.uniform2f(this.perlinNoiseShader.resolution, this.noiseTextSize, this.noiseTextSize);
+
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+
+            }
+
             computeCombedNormals(computeShader, model) {
 
                 this.calculateMVPMatrix(0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
@@ -662,17 +688,6 @@ define([
                 gl.uniformMatrix4fv(computeShader.view_model_matrix, false, this.mMVMatrix);
                 gl.uniformMatrix4fv(computeShader.view_proj_matrix, false, this.mMVPMatrix);
 
-                // // //Mouse clip position
-                // var mouseWorldPoss = MatrixUtils.vec3.create();
-                // MatrixUtils.vec3.set(mouseWorldPoss, this.combViewDirection2D[0]
-                //     , this.combViewDirection2D[1]
-                //     , 0);
-                // var inverseMVP = MatrixUtils.mat4.create();
-                // MatrixUtils.mat4.invert(inverseMVP, this.mMVPMatrix);
-                // MatrixUtils.vec3.transformMat4(mouseWorldPoss, mouseWorldPoss, inverseMVP);
-                //     console.log(mouseWorldPoss);
-
-                // gl.uniform3f(computeShader.mousePos, mouseWorldPoss[0],mouseWorldPoss[1], mouseWorldPoss[2]);
 
                 gl.uniform3f(computeShader.mousePos, this.mouseNDCPosition[0], this.mouseNDCPosition[1], 0);
                 //Bursh radio
@@ -811,7 +826,7 @@ define([
                     gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.targetTexture, level);
 
 
-                //Create depth attachment    
+                //Create depth attachment
                 this.depthRenderBuffer = gl.createRenderbuffer();
                 gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthRenderBuffer);
                 gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.canvas.clientWidth, this.canvas.clientHeight);
@@ -886,7 +901,7 @@ define([
                     gl.RENDERBUFFER,
                     this.colorRenderbuffer);
 
-                    //Create depth attachment    
+                //Create depth attachment
                 // this.depthRenderBuffer = gl.createRenderbuffer();
                 // gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthRenderBuffer);
                 // gl.renderbufferStorageMultisample(gl.RENDERBUFFER, gl.getParameter(gl.MAX_SAMPLES) ,gl.DEPTH_STENCIL, this.canvas.clientWidth, this.canvas.clientHeight);
@@ -900,6 +915,60 @@ define([
 
                 gl.framebufferTexture2D(
                     gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.targetTexture, level);
+
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+
+            }
+            createNoiseTextureFBO(size) {
+
+                this.hairAlphaNoiseTexture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, this.hairAlphaNoiseTexture);
+
+
+                // define size and format of level 0
+                const level = 0;
+                const internalFormat = gl.RGBA;
+                const border = 0;
+                const format = gl.RGBA;
+                const type = gl.UNSIGNED_BYTE;
+                const data = null;
+                gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                    size, size, border,
+                    format, type, data);
+
+                // set the filtering so we don't need mips
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                               
+                this.renderBuffer = gl.createFramebuffer();
+                this.colorBuffer = gl.createFramebuffer();
+
+                this.colorRenderbuffer = gl.createRenderbuffer();
+
+                gl.bindRenderbuffer(gl.RENDERBUFFER,
+                    this.colorRenderbuffer);
+
+                gl.renderbufferStorage(gl.RENDERBUFFER,
+                    gl.RGBA8,
+                    size,
+                    size);
+
+                gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderBuffer);
+
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER,
+                    gl.COLOR_ATTACHMENT0,
+                    gl.RENDERBUFFER,
+                    this.colorRenderbuffer);
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.colorBuffer);
+
+
+                gl.framebufferTexture2D(
+                    gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.hairAlphaNoiseTexture, level);
 
 
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);

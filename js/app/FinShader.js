@@ -160,8 +160,10 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '  float u =dot(T,L);\n' + //Lambertian
                 '  float v =dot(T,H);\n' + //Spec
                 
-                
-                '  vec3 color = Sa*Ka+Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5);\n' +
+                //Modified Kajiyas
+                '  vec3 color = Sa*Ka+(Kd*pow(sin(acos(u)),Pd)+Ks*pow(sin(acos(v)),Ps));\n' +
+                 //Kajiyas original
+                //  '  vec3 color = Sa*Ka+(Kd*(Pd*.1)*sin(acos(u))+Ks*0.7*pow(u*dot(T,V)+sin(acos(u))*sin(acos(dot(T,V))),Ps));\n' +
                 
                 '  return vec4(color,1.0)*intensity;\n' +
                 '}\n' +

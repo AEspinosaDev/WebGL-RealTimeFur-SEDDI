@@ -103,6 +103,9 @@ define([
             $('#sliderLightPosY').on('change', function (e) {
                 renderer.lightPos[2] = e.value.newValue;
             });
+            $('#sliderLightPosZ').on('change', function (e) {
+                renderer.lightPos[0] = e.value.newValue;
+            });
             $('#sliderLightIntensity').on('change', function (e) {
                 renderer.lightIntensity = e.value.newValue;
             });
@@ -263,6 +266,7 @@ define([
                 $('#sliderFinTexture').slider('setValue', renderer.finTextureSize);
                 $('#sliderLightPosX').slider('setValue', renderer.lightPos[1]);
                 $('#sliderLightPosY').slider('setValue', renderer.lightPos[2]);
+                $('#sliderLightPosZ').slider('setValue', renderer.lightPos[0]);
                 $('#sliderLightIntensity').slider('setValue', renderer.lightIntensity);
                 $('#sliderAmbientStrength').slider('setValue', renderer.ambientStrength);
                 $('#sliderDiffusePower').slider('setValue', renderer.diffusePower);

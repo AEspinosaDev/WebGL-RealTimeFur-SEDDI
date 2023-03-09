@@ -38,9 +38,9 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'out vec3 vPos;\n' +
                 'out vec3 lightViewPos;\n' +
                 'out float textureOffset;\r\n' +
-                
+
                 'out vec3 normal;\n' +
-                
+
                 // 'mat4 rotationMatrix(vec3 axis, float angle) {\n' +
                 // '   axis = normalize(axis);\n' +
                 // '    float s = sin(angle);\n' +
@@ -63,7 +63,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '    float f = float(gl_InstanceID+1) * shellOffset;\r\n' +
 
                 '    float layerCoeff = float(gl_InstanceID) / layersCount;\r\n' +
-            
+
                 // '    float offset = sin(layerCoeff*3.0)/3.0;\n' +
 
                 // '    vec3 tangentRandDirection = rotate(rm_Tangent,rm_Normal,0.4);\r\n' +
@@ -114,7 +114,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'in float textureOffset;\r\n' +
 
                 'in vec3 normal;\n' +
-                
+
                 'out vec4 fragColor;\r\n' +
 
                 //Powers
@@ -124,52 +124,33 @@ define(['framework/BaseShader'], function (BaseShader) {
                 //Texture colors
                 '  vec3 Ka;\n' +
                 '  vec3 Kd;\n' +
-                '  float Ks;\n' +
+                '  vec3 Ks;\n' +
                 '  float shininess = 8.0;\n' + //this should be a shininess texture
 
                 '  float tx = 0.6;\n' +
                 '  float ty = 0.1812;\n' +
 
                 'vec2 rotateUV(vec2 uv, float rotation);\n' +
-                'vec4 computePointLight();\n' +
                 'vec4 computeHairLighting();\n' +
                 '\r\n' +
                 'void main()\r\n' +
                 '{\r\n' +
                 '   useColorText == 0 ? Ka = hairColor : Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
                 '   Kd = Ka;' +
-                '   Ks = 0.1;\r\n' +
+                // '   Ks = 0.1;\r\n' +
+                '   Ks = Ka;\r\n' +
                 '   float alphaColor = mix(texture(alphaMap, vTexCoord0*textureFactor).r,texture(alphaMapTip, vTexCoord0*textureFactor).r,curlynessCoeff-0.2);\r\n' +
                 '   fragColor = computeHairLighting();\r\n' +
                 '   fragColor *= vAO;\r\n' +
 
                 '   fragColor.a *= alphaColor;\r\n' +
                 '}\n' +
-                //#region 
-                'vec4 computePointLight() {\n' +
-                '  vec3 lightDir = normalize(lightViewPos-vPos);\n' +
-                '  vec3 viewDir = normalize(-vPos);\n' +
-                '  vec3 halfwayDir = normalize(lightDir-viewDir);\n' +
 
-                '  vec3 n = normalize(hairNormal);\n' +
-
-                //Ambient
-                '  vec3 ambient = Sa*Ka*lightColor;\n' +
-                //Diffuse
-                '  float lambertian = Ps*max(dot(n, lightDir), 0.0);\n' +
-                '  vec3 diffuse =Kd*lambertian*lightColor;\n' +
-                //Specular
-                '  vec3 reflectDir = reflect(-lightDir,n);\n' +
-                '  float spec = Ks*Ps * pow(max(dot(n, halfwayDir), 0.0), shininess);\n' +
-                '  vec3 specular = spec*lightColor;\n' +
-                //Result
-                '  return vec4((ambient+diffuse+specular),1.0)*intensity;\n' +
-                '}\n' +
-                //#endregion
 
                 //Kayijas method
                 'vec4 computeHairLighting() {\n' +
                 '  vec3 L = normalize(lightViewPos-vPos);\n' + //LightDir
+                // '  vec3 L = normalize(vec3(0.0,0.0,-650.0)-vPos);\n' + //LightDir
                 '  vec3 V = normalize(-vPos);\n' + //ViewDir
                 '  vec3 H = normalize(L-V);\n' + //Halfway
                 '  vec3 N = normalize(hairNormal);\n' + //Normal
@@ -177,9 +158,17 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 '  float u =dot(T,L);\n' + //Lambertian
                 '  float v =dot(T,H);\n' + //Spec
+                '  float t =dot(T,V);\n' + //Spec2
 
+                //My kajiyas
                 // '  vec3 color = Sa*Ka+(Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5))*clamp(dot(normalize(normal),L),0.0,1.0);\n' +
-                '  vec3 color = Sa*Ka+(Kd*pow(1.0-pow(u,2.0),Pd*0.5)+Kd*pow(1.0-pow(v,2.0),Ps*0.5));\n' +
+
+                //Kajiyas original
+                // '  vec3 color = Sa*Ka+(Kd*(Pd*.1)*sin(acos(u))+Ks*0.7*pow(u*t+sin(acos(u))*sin(acos(t)),Ps));\n' +
+                // '  vec3 color = Sa*Ka+(Kd*max(u,0.0)+Ks*0.7*pow(u*t+sin(acos(u))*sin(acos(t)),Ps));\n' +
+
+                //Modified kayijas
+                '  vec3 color = Sa*Ka+(Kd*pow(sin(acos(u)),Pd)+Ks*pow(sin(acos(v)),Ps));\n' +
 
                 '  return vec4(color,1.0)*intensity;\n' +
                 '}\n' +

@@ -31,6 +31,9 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 '\n' +
                 'void main() {\n' +
+                // '       vec2 textureCoord =vTextureCoord;\n' +
+                // '        textureCoord.y -= 0.5;\n' +
+                // '        textureCoord.x -= 0.5;\n' +
                 '  vec4 outColor = vec4(texture2D(sTexture, vTextureCoord).rgb,1.0);\n' +
                 '  if(isPostProcess==1){\n' +
                 '       float distanceX = abs(gl_FragCoord.x - mousePos.x);\n' +

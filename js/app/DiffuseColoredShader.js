@@ -45,6 +45,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform sampler2D depthMap;\r\n' +
                 'uniform vec3 lightColor;\n' +
                 'uniform vec4 color;\n' +
+                'uniform vec3 skinColor;\n' +
                 'uniform float intensity;\n' +
 
                 'in vec2 vTexCoord0;\r\n' +
@@ -67,7 +68,8 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '\r\n' +
                 'void main()\r\n' +
                 '{\r\n' +
-                '   Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
+                // '   Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
+                '   Ka = skinColor;\r\n' +
                 '   Kd = Ka;' +
                 '   Ks = 0.5;\r\n' +
                 '   fragColor = computePointLight();\r\n' +
@@ -109,6 +111,7 @@ define(['framework/BaseShader'], function (BaseShader) {
             this.lightColor = this.getUniform('lightColor');
             this.lightIntensity = this.getUniform('intensity');
             this.color = this.getUniform('color');
+            this.skinColor = this.getUniform('skinColor');
 
             this.depthMap = this.getUniform('depthMap');
         }
