@@ -39,4 +39,4 @@ For rendering shells it uses WebGL instance rendering, fins are precomputed at m
 * gl-matrix, a high performance matrix and vector operations by Brandon Jones and Colin MacKenzie IV
 * WebGL initialization code is based on http://learningwebgl.com/ tutorials
 * Basic low-level WebGL framework - https://github.com/keaukraine/webgl-framework
-* Basis hair functionality from https://github.com/keaukraine/webgl-fur and heavily modified and expanded for research purposes.
+* Basic hair functionality from https://github.com/keaukraine/webgl-fur and heavily modified and expanded for research purposes.
