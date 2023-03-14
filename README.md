@@ -19,6 +19,7 @@ For rendering shells it uses WebGL instance rendering, fins are precomputed at m
 
   * Use a better shading algorythm. (Right now uses a slightly modified Kajiya´s method, which is not physically based and has a lot of short-commings)
 
+* Support for mobile-phones.
 <h2>Screenshots</h2>
 
 
