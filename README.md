@@ -1,6 +1,6 @@
 # Real Time Fur in WebGL SEDDI
 
-* You can check this demo on the webpage. Works in latest navigators.
+* You can check this demo on the webpage. Works in latest navigators. https://aespinosadev.github.io/WebGL-RealTimeFur-SEDDI/
 * Comb fur functionality and completely customizable!
 * This project is being migrated to ThreeJS platform. Future improvements will be added to this other repository.
 * In the next few months a memory will be added explaining the ins and outs of this project.
