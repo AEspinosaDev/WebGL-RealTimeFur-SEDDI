@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="HairFur 3D WebGL Demo">
     <meta name="author" content="Oleksandr Popov and Antonio Espinosa">
-   
+
     <link rel="manifest" href="/manifest.json">
     <meta name="msapplication-TileColor" content="#cccccc">
     <meta name="msapplication-TileImage" content="/icons/ms-icon-144x144.png">
@@ -81,9 +81,30 @@
                                     Render Shells
                                     <input class="form-check-input" type="checkbox" value="" id="renderShells" checked>
                                 </label>
+
                             </div>
+
                         </div>
-                        </br>
+                        <div class="form-group">
+                            <div class="row">
+                                <label class="col-sm-3 control-label text-left">
+                                    Procedural textures
+                                    <input class="form-check-input" type="checkbox" value="" id="proceduralTexture"
+                                        checked>
+                                </label>
+                                <div class="form-group row">
+                                    <label id="persistence" class="col-sm-2 control-label ">Persistence</label>
+                                    <div class="col-sm-2">
+                                        <input type="number" class="form-control" id="inputPersistence" placeholder="0.8"  min="0.1" max="2.0" step="0.05" value="0.8">
+                                    </div>
+                                    <label id="lacunarity" class="col-sm-2 control-label ">Lacunarity</label>
+                                    <div class="col-sm-2">
+                                        <input type="number" class="form-control" id="inputLacunarity" placeholder="0.7"  min="0.1" max="2.0" step="0.05" value="0.7">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label text-left">
                                 Number of Layers
@@ -104,24 +125,15 @@
                                     data-slider-value="2">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label text-left">
-                                Hair Texture Density
-                            </label>
-                            <div class="col-sm-9">
-                                <input id="sliderDensity" class=".slider" type="text" data-provide="slider"
-                                    data-slider-min="0" data-slider-max="5" data-slider-step="1"
-                                    data-slider-value="5">
-                            </div>
-                        </div>
+
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label text-left">
                                 Hair Curlyness
                             </label>
                             <div class="col-sm-9">
                                 <input id="sliderCurlyness" class=".slider" type="text" data-provide="slider"
-                                    data-slider-min="0" data-slider-max="10" data-slider-step="1"
-                                    data-slider-value="0">
+                                    data-slider-min="0" data-slider-max="10" data-slider-step="1" data-slider-value="0">
                             </div>
                         </div>
                         <div class="form-group">
@@ -150,7 +162,7 @@
                             </label>
                             <input type="color" id="furColor" name="furColor" value="#fffefa" size="600">
                         </div>
-                        
+
                         <div class="form-group">
                             <label class="control-label text-right">
                                 <h3>Light Properties</h3>
@@ -254,11 +266,11 @@
         title="Previous preset">
         <i class="material-icons md-48">chevron_left</i>
     </a>
-    <div class="control-icon help" id = "help">
-        <p style="color:white;"> Mouse LEFT buttom: Rotate    </p>
-        <p style="color:white;"> Mouse MIDDLE buttom: Comb   </p>
-        <p style="color:white;"> Mouse MIDDLE + LEFT buttom: Resize comb   </p>
-        <p style="color:white;"> Mouse scroll: Zoom   </p>
+    <div class="control-icon help" id="help">
+        <p style="color:white;"> Mouse LEFT buttom: Rotate </p>
+        <p style="color:white;"> Mouse MIDDLE buttom: Comb </p>
+        <p style="color:white;"> Mouse MIDDLE + LEFT buttom: Resize comb </p>
+        <p style="color:white;"> Mouse scroll: Zoom </p>
     </div>
 </body>
 

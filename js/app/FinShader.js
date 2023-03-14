@@ -123,6 +123,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '   Ks = 0.1;\r\n' +
 
                 '  fragColor=computeHairLighting();\r\n' +
+
                 '  fragColor*=vAO;\r\n' +
                 '  fragColor.a = outAlpha*k_alpha;\r\n' +
                 // '  fragColor =vec4(1, 0, 0, alpha);\n' +
@@ -209,6 +210,7 @@ define(['framework/BaseShader'], function (BaseShader) {
 
             this.textureFactor = this.getUniform('textureFactor');
             this.useColorText = this.getUniform('useColorText');
+
 
         }
     }

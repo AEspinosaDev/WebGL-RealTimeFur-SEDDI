@@ -41,22 +41,6 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 'out vec3 normal;\n' +
 
-                // 'mat4 rotationMatrix(vec3 axis, float angle) {\n' +
-                // '   axis = normalize(axis);\n' +
-                // '    float s = sin(angle);\n' +
-                // '    float c = cos(angle);\n' +
-                // '     float oc = 1.0 - c;\n' +
-
-                // '    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,\n' +
-                // '                 oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,\n' +
-                // '                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,\n' +
-                // '                0.0,                                0.0,                                0.0,                                1.0);\n' +
-                // ' }\n' +
-
-                // ' vec3 rotate(vec3 v, vec3 axis, float angle) {\n' +
-                // '     mat4 m = rotationMatrix(axis, angle);\n' +
-                // '     return (m * vec4(v, 1.0)).xyz;\n' +
-                // ' }\n' +
 
                 'void main( void )\r\n' +
                 '{\r\n' +
@@ -64,13 +48,12 @@ define(['framework/BaseShader'], function (BaseShader) {
 
                 '    float layerCoeff = float(gl_InstanceID) / layersCount;\r\n' +
 
-                // '    float offset = sin(layerCoeff*3.0)/3.0;\n' +
+                // '  textureOffset = sin(layerCoeff*10.0)/1500.0;\n' +
+                '  if(curlyFrequency > 0.0) textureOffset = sin(layerCoeff*curlyFrequency)/1500.0; else textureOffset = 0.0;\n' +
 
-                // '    vec3 tangentRandDirection = rotate(rm_Tangent,rm_Normal,0.4);\r\n' +
 
                 '    vec4 vertex = rm_Vertex + vec4(rm_C_Normal, 0.0) * vec4(f, f, f, 0.0);\r\n' +
 
-                // '    vertex += vec4(tangentRandDirection,0.0)*vec4(offset, offset, offset, 0.0);\r\n' +
 
                 '    gl_Position = view_proj_matrix * vertex;\r\n' +
 
@@ -104,7 +87,6 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform float textureFactor;\n' +
                 'uniform int useColorText;\n' +
 
-
                 'in vec2 vTexCoord0;\r\n' +
                 'in vec4 vAO;\r\n' +
                 'in vec3 hairNormal;\n' +
@@ -135,12 +117,14 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '\r\n' +
                 'void main()\r\n' +
                 '{\r\n' +
-                '   useColorText == 0 ? Ka = hairColor : Ka = texture(diffuseMap, vTexCoord0).rgb;\r\n' +
+                '   vec2 textCoord; textCoord.x = vTexCoord0.x+textureOffset; textCoord.y = vTexCoord0.y+textureOffset;\r\n' +
+                '   useColorText == 0 ? Ka = hairColor : Ka = texture(diffuseMap, textCoord).rgb;\r\n' +
                 '   Kd = Ka;' +
                 // '   Ks = 0.1;\r\n' +
                 '   Ks = Ka;\r\n' +
-                '   float alphaColor = mix(texture(alphaMap, vTexCoord0*textureFactor).r,texture(alphaMapTip, vTexCoord0*textureFactor).r,curlynessCoeff-0.2);\r\n' +
+                '   float alphaColor = mix(texture(alphaMap, textCoord*textureFactor).r,texture(alphaMapTip, textCoord*textureFactor).r,curlynessCoeff-0.2);\r\n' +
                 '   fragColor = computeHairLighting();\r\n' +
+
                 '   fragColor *= vAO;\r\n' +
 
                 '   fragColor.a *= alphaColor;\r\n' +
@@ -150,7 +134,6 @@ define(['framework/BaseShader'], function (BaseShader) {
                 //Kayijas method
                 'vec4 computeHairLighting() {\n' +
                 '  vec3 L = normalize(lightViewPos-vPos);\n' + //LightDir
-                // '  vec3 L = normalize(vec3(0.0,0.0,-650.0)-vPos);\n' + //LightDir
                 '  vec3 V = normalize(-vPos);\n' + //ViewDir
                 '  vec3 H = normalize(L-V);\n' + //Halfway
                 '  vec3 N = normalize(hairNormal);\n' + //Normal
@@ -223,7 +206,6 @@ define(['framework/BaseShader'], function (BaseShader) {
 
             this.textureFactor = this.getUniform('textureFactor');
             this.useColorText = this.getUniform('useColorText');
-
 
 
 

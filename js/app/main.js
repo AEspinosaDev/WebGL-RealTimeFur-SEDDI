@@ -131,6 +131,12 @@ define([
             $('#finOpacity').on('change', function () {
                 if (renderer.finOpacity) { renderer.finOpacity = false } else { renderer.finOpacity = true };
             });
+            $('#proceduralTexture').on('change', function () {
+                var $this = $(this),
+                $controls  = $('#inputLacunarity, #inputPersistence, #persistence, #lacunarity');
+                $controls.toggle();
+                if (renderer.proceduralText) { renderer.proceduralText = false } else { renderer.proceduralText = true };
+            });
             $("#furColor").change(function () {
                 var color = $(this).val();
                 const r = parseInt(color.substr(1, 2), 16) / 255;
@@ -138,6 +144,16 @@ define([
                 const b = parseInt(color.substr(5, 2), 16) / 255;
                 renderer.furColor = [r, g, b];
             });
+
+            $('#inputPersistence').on('change', function () {
+               renderer.persistence = $(this).val();
+               renderer.recalculateNoiseText = true;
+            });
+            
+            $('#inputLacunarity').on('change', function () {
+                renderer.lacunarity = $(this).val();
+                renderer.recalculateNoiseText = true;
+             });
 
 
             //Mouse events

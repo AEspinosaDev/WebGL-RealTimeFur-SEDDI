@@ -64,6 +64,7 @@ define([
                 this.renderFur = true;
                 this.finOpacity = false;
                 this.recalculateNoiseText = true;
+                this.proceduralText = true;
 
                 //HairProperties not in presets
                 this.curlyness = 0;
@@ -71,6 +72,9 @@ define([
                 this.curlyFrequency = 50;
                 this.curlyAmplitude = 0.008;
                 this.textureDensity = 0;
+
+                this.persistence = 0.8;
+                this.lacunarity = 0.7;
 
                 this.CURLY_DEGREE_STEP = 0.2;
                 this.CURLY_FREQ_STEP = 15;
@@ -109,7 +113,7 @@ define([
                 this.ambientStrength = 0.6;
 
 
-                this.ITEMS_TO_LOAD = 8; // total number of OpenGL buffers+textures to load
+                this.ITEMS_TO_LOAD = 7; // total number of OpenGL buffers+textures to load
                 this.FLOAT_SIZE_BYTES = 4; // float size, used to calculate stride sizes
                 this.TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * this.FLOAT_SIZE_BYTES;
                 this.TRIANGLE_VERTICES_DATA_POS_OFFSET = 0;
@@ -204,9 +208,9 @@ define([
                 var modelCube = new FullModel(true);
                 modelCube.loadJson('data/models/bunnyUV.json', boundUpdateCallback);
                 this.models.set("rabbit", modelCube);
-                var modelDog = new FullModel(true);
-                modelDog.loadJson('data/models/dog.json', boundUpdateCallback);
-                this.models.set("dog", modelDog);
+                // var modelDog = new FullModel(true);
+                // modelDog.loadJson('data/models/dog.json', boundUpdateCallback);
+                // this.models.set("dog", modelDog);
                 var modelCloth = new FullModel(true);
                 modelCloth.loadJson('data/models/cloth.json', boundUpdateCallback);
                 this.models.set("cloth", modelCloth);
@@ -413,7 +417,7 @@ define([
                 if (this.recalculateNoiseText) {
                     this.recalculateNoiseText = false;
 
-                    gl.viewport(0, 0,  this.noiseTextSize,  this.noiseTextSize);
+                    gl.viewport(0, 0, this.noiseTextSize, this.noiseTextSize);
                     gl.bindFramebuffer(gl.FRAMEBUFFER, this.renderBuffer);
 
                     this.drawNoiseTexture();
@@ -560,10 +564,13 @@ define([
                 this.shaderShell.use();
                 gl.uniform1i(this.shaderShell.useColorText, preset['useColorText']);
                 this.setTexture2D(0, textureDiffuse, this.shaderShell.diffuseMap);
-                this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
-                // this.setTexture2D(1, this.hairAlphaNoiseTexture, this.shaderShell.alphaMap);
-                this.setTexture2D(2, this.textureFurTipAlpha, this.shaderShell.alphaMapTip);
-                // this.setTexture2D(2, this.hairAlphaNoiseTexture, this.shaderShell.alphaMapTip);
+                if (this.proceduralText) {
+                    this.setTexture2D(1, this.hairAlphaNoiseTexture, this.shaderShell.alphaMap);
+                    this.setTexture2D(2, this.hairAlphaNoiseTexture, this.shaderShell.alphaMapTip);
+                } else {
+                    this.setTexture2D(1, textureAlpha, this.shaderShell.alphaMap);
+                    this.setTexture2D(2, this.textureFurTipAlpha, this.shaderShell.alphaMapTip);
+                }
 
                 if (this.renderShells) {
                     this.drawShellsVBOTranslatedRotatedScaledInstanced(preset, this.shaderShell, this.models.get(preset['mesh']), 0, 0, 0, 0, this.dragAngles[0], this.dragAngles[1], 1, 1, 1);
@@ -621,11 +628,13 @@ define([
 
 
                 gl.uniform1f(shader.curlyDegree, this.curlyDegree);
+                gl.uniform1f(shader.curlyFrequency, this.curlyness * 2.0);
+                gl.uniform1f(shader.curlyAmplitude, 2000 - this.curlyness * 500);
 
-                gl.uniform1f(shader.curlyFrequency, this.curlyFrequency);
-                gl.uniform1f(shader.curlyAmplitude, this.curlyAmplitude);
 
                 gl.uniform1f(shader.textureFactor, preset.shellTextureSize);
+
+                gl.uniform1i(shader.vao, this.ambientOcc);
 
 
                 gl.drawElementsInstanced(gl.TRIANGLES, model.getNumIndices(), gl.UNSIGNED_SHORT, 0, preset.layers);
@@ -659,6 +668,7 @@ define([
                 gl.uniform1f(shader.curlyAmplitude, this.curlyAmplitude);
 
                 gl.uniform1i(shader.finOpacity, this.finOpacity);
+                gl.uniform1i(shader.vao, this.ambientOcc);
 
                 gl.uniform1f(shader.textureFactor, preset.finTextureSize);
 
@@ -671,6 +681,8 @@ define([
                 this.perlinNoiseShader.use();
 
                 gl.uniform2f(this.perlinNoiseShader.resolution, this.noiseTextSize, this.noiseTextSize);
+                gl.uniform1f(this.perlinNoiseShader.lacunarity, this.lacunarity);
+                gl.uniform1f(this.perlinNoiseShader.persistence, this.persistence);
 
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -941,7 +953,7 @@ define([
                 // set the filtering so we don't need mips
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                               
+
                 this.renderBuffer = gl.createFramebuffer();
                 this.colorBuffer = gl.createFramebuffer();
 

@@ -74,6 +74,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '   Ks = 0.5;\r\n' +
                 '   fragColor = computePointLight();\r\n' +
                 '   fragColor*=color;\r\n' +
+                '   fragColor*=5.0;\r\n' +
                 // '   fragColor=texture(depthMap, vTexCoord0);\r\n' +
 
                 '}\n' +
