@@ -10,7 +10,7 @@ define(function () {
         'layers': 32,
         'hairLength': 2.5,
         'waveScale': 0.3,
-        'diffuseTexture': 'noise_test_b.png',
+        'diffuseTexture': 'fur-wolf.png',
         'alphaTexture': 'bunnyalpha_base.png',
         'tipAlphaTexture': 'bunnyalpha_tip.png',
         'finAlphaTexture': 'hairs-alpha.png',
