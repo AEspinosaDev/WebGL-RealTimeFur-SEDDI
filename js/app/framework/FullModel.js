@@ -101,7 +101,7 @@ define(['./BinaryDataLoader', './JsonDataLoader', 'framework/utils/MatrixUtils']
                 var finUVs = new Array();
                 var newIndex = 0;
 
-
+                console.log(vertices);
                 ////// NEW STUFF ///////////////////
                 var auxVertices = new Array();
                 var auxEdges = new Array();

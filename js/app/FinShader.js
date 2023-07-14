@@ -154,15 +154,16 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'vec4 computeHairLighting() {\n' +
                 '  vec3 L = normalize(lightViewPos-vPos);\n' + //LightDir
                 '  vec3 V = normalize(-vPos);\n' + //ViewDir
-                '  vec3 H = normalize(L-V);\n' + //Halfway
-                '  vec3 N = normalize(hairDirection);\n' + //Normal
+                '  vec3 H = normalize(L+V);\n' + //Halfway
+                '  vec3 N = normalize(finNormal);\n' + //Normal
                 '  vec3 T = N;\n' + //Hair direction :C
                 
                 '  float u =dot(T,L);\n' + //Lambertian
                 '  float v =dot(T,H);\n' + //Spec
                 
                 //Modified Kajiyas
-                '  vec3 color = Sa*Ka+(Kd*pow(sin(acos(u)),Pd)+Ks*pow(sin(acos(v)),Ps));\n' +
+                // '  vec3 color = Sa*Ka+(Kd*pow(sin(acos(u)),Pd)+Ks*pow(sin(acos(v)),Ps));\n' +
+                '  vec3 color = Sa*Ka+clamp(Kd*dot(N,L),0.0,1.0)+clamp(dot(N,L),0.0,1.0)*Ks*pow(sin(acos(v)),Ps);\n' +
                  //Kajiyas original
                 //  '  vec3 color = Sa*Ka+(Kd*(Pd*.1)*sin(acos(u))+Ks*0.7*pow(u*dot(T,V)+sin(acos(u))*sin(acos(dot(T,V))),Ps));\n' +
                 

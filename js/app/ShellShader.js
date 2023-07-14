@@ -21,7 +21,7 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'uniform float curlyFrequency;\n' +
                 'uniform float curlyAmplitude;\n' +
 
-
+                'const float WAVE_AMPLITUDE = 0.00066;\n' +
                 '\r\n' +
 
                 'in vec4 rm_Vertex;\r\n' +
@@ -47,10 +47,16 @@ define(['framework/BaseShader'], function (BaseShader) {
                 '    float f = float(gl_InstanceID+1) * shellOffset;\r\n' +
 
                 '    float layerCoeff = float(gl_InstanceID) / layersCount;\r\n' +
-
+                'float slope = 0.0;\n' +
                 // '  textureOffset = sin(layerCoeff*10.0)/1500.0;\n' +
                 '  if(curlyFrequency > 0.0) textureOffset = sin(layerCoeff*curlyFrequency)/1500.0; else textureOffset = 0.0;\n' +
-
+                'if(curlyFrequency > 0.0){\n' +
+                 '   textureOffset = sin(layerCoeff*curlyFrequency)*WAVE_AMPLITUDE;\n' +
+                    'slope = cos(layerCoeff*curlyFrequency)*(WAVE_AMPLITUDE*curlyFrequency);\n' +
+            
+                '}else{\n' +
+                  'textureOffset=0.0;\n' +
+                '}\n' +
 
                 '    vec4 vertex = rm_Vertex + vec4(rm_C_Normal, 0.0) * vec4(f, f, f, 0.0);\r\n' +
 
@@ -135,9 +141,9 @@ define(['framework/BaseShader'], function (BaseShader) {
                 'vec4 computeHairLighting() {\n' +
                 '  vec3 L = normalize(lightViewPos-vPos);\n' + //LightDir
                 '  vec3 V = normalize(-vPos);\n' + //ViewDir
-                '  vec3 H = normalize(L-V);\n' + //Halfway
-                '  vec3 N = normalize(hairNormal);\n' + //Normal
-                '  vec3 T = N;\n' + //Hair direction :C
+                '  vec3 H = normalize(L+V);\n' + //Halfway
+                '  vec3 N = normalize(normal);\n' + //Normal
+                '  vec3 T =  normalize(hairNormal);\n' + //Hair direction :C
 
                 '  float u =dot(T,L);\n' + //Lambertian
                 '  float v =dot(T,H);\n' + //Spec
@@ -151,7 +157,9 @@ define(['framework/BaseShader'], function (BaseShader) {
                 // '  vec3 color = Sa*Ka+(Kd*max(u,0.0)+Ks*0.7*pow(u*t+sin(acos(u))*sin(acos(t)),Ps));\n' +
 
                 //Modified kayijas
-                '  vec3 color = Sa*Ka+(Kd*pow(sin(acos(u)),Pd)+Ks*pow(sin(acos(v)),Ps));\n' +
+                // '  vec3 color = Sa*Ka+(Kd*pow(sin(acos(u)),Pd)+Ks*pow(sin(acos(v)),Ps));\n' +
+                '  vec3 color = Sa*Ka+clamp(Kd*dot(N,L),0.0,1.0)+clamp(dot(N,L),0.0,1.0)*Ks*pow(sin(acos(v)),Ps);\n' +
+                // vec3 result =  uAmbientStrength*Ka+clamp(Kd*dot(normalize(hairNormal),L)*mix(0.25,1.0,GeometrySmith(normalize(hairNormal),V,L,0.0)),0.0,1.0)+clamp(dot(normalize(hairNormal),L),0.0,1.0)*Ks*pow(sin(acos(v)),uSpecularPower);
 
                 '  return vec4(color,1.0)*intensity;\n' +
                 '}\n' +
