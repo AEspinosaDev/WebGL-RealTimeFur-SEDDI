@@ -2,7 +2,7 @@
 
 * You can check this demo on the webpage. Works in latest navigators. https://aespinosadev.github.io/WebGL-RealTimeFur-SEDDI/
 * Comb fur functionality and completely customizable!
-* This project is being migrated to ThreeJS platform. Future improvements will be added to this other repository.
+* This project is being migrated to ThreeJS platform. Future improvements will be added to this other repository. https://github.com/AEspinosaDev/ThreeJS-RealTimeFur-SEDDI.git
 * In the next few months a memory will be added explaining the ins and outs of this project.
 
 <h4>The implemented fur rendering method is described in this paper: https://hhoppe.com/fur.pdf.</h4>
